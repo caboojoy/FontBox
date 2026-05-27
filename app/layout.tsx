@@ -3,19 +3,43 @@ import Providers from '@/components/Providers'
 import Navbar from '@/components/Navbar'
 import './globals.css'
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.vercel.app'
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: 'FontBox — 한글·영문 무료 웹폰트 모음',
     template: '%s | FontBox',
   },
-  description:
-    '한글과 영문 무료 웹폰트를 한 곳에서. 실시간 미리보기, AI 추천, CSS 코드 자동 생성.',
-  keywords: ['웹폰트', '한글폰트', '영문폰트', '무료폰트', '폰트추천', 'font', 'webfont'],
+  description: '한글과 영문 무료 웹폰트 55개+를 한 곳에서. 실시간 미리보기, AI 폰트 추천, CSS 코드 자동 생성. 상업적 이용 가능한 무료 폰트.',
+  keywords: [
+    '웹폰트', '한글폰트', '영문폰트', '무료폰트', '폰트추천',
+    '상업용폰트', '무료한글폰트', 'webfont', 'free font', 'google fonts',
+    '나눔폰트', '고딕체', '명조체', 'CSS폰트', '폰트모음',
+  ],
+  authors: [{ name: 'FontBox' }],
+  creator: 'FontBox',
+  publisher: 'FontBox',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
   openGraph: {
     title: 'FontBox — 한글·영문 무료 웹폰트 모음',
-    description: '한글과 영문 무료 웹폰트를 한 곳에서. AI가 추천해드립니다.',
+    description: '한글과 영문 무료 웹폰트 55개+. AI 추천, 실시간 미리보기, CSS 코드 자동 생성.',
     type: 'website',
     locale: 'ko_KR',
+    url: SITE_URL,
+    siteName: 'FontBox',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'FontBox — 한글·영문 무료 웹폰트 모음',
+    description: '한글과 영문 무료 웹폰트 55개+. AI 추천, 실시간 미리보기.',
+  },
+  alternates: {
+    canonical: SITE_URL,
   },
 }
 
