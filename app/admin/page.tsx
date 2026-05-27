@@ -105,7 +105,7 @@ export default function AdminPage() {
     : (form.preview_ko||'다람쥐 헌 쳇바퀴에 타고파')
 
   return (
-    <div className="max-w-6xl mx-auto px-4 pt-24 pb-16">
+    <div style={{ maxWidth: 1152, margin: "0 auto", padding: "96px 24px 80px" }}>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold mb-2" style={{color:'var(--text-primary)'}}>폰트 관리</h1>

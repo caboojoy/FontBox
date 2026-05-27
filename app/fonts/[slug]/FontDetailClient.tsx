@@ -92,7 +92,7 @@ export default function FontDetailClient({ font, similarFonts }: Props) {
   const sampleTexts = SAMPLE_TEXTS[font.language] ?? SAMPLE_TEXTS.korean
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-24 pb-16">
+    <div style={{ maxWidth: 896, margin: "0 auto", padding: "96px 24px 80px" }}>
       <Link href="/"
         className="inline-flex items-center gap-2 text-sm mb-8 hover:opacity-70 transition-opacity animate-fade-up"
         style={{ color: 'var(--text-muted)' }}>

@@ -16,105 +16,79 @@ const EXAMPLE_PROMPTS = [
 ]
 
 export default function AIPage() {
-  const [prompt, setPrompt] = useState('')
+  const [prompt, setPrompt]   = useState('')
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<AIRecommendation | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [result, setResult]   = useState<AIRecommendation | null>(null)
+  const [error, setError]     = useState<string | null>(null)
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault()
     if (!prompt.trim() || loading) return
-
-    setLoading(true)
-    setError(null)
-    setResult(null)
-
+    setLoading(true); setError(null); setResult(null)
     const res = await getAIRecommendation(prompt)
-
-    if ('error' in res) {
-      setError(res.error)
-    } else {
-      setResult(res)
-    }
+    if ('error' in res) setError(res.error)
+    else setResult(res)
     setLoading(false)
   }
 
-  const handleExample = (text: string) => {
-    setPrompt(text)
-  }
-
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-24 pb-16">
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: '96px 24px 80px' }}>
+
       {/* 헤더 */}
-      <div className="text-center mb-10 animate-fade-up">
-        <div
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6"
-          style={{
-            background: 'rgba(30,144,255,0.12)',
-            color: 'var(--accent)',
-            border: '1px solid rgba(30,144,255,0.2)',
-          }}
-        >
-          <Sparkles size={14} />
-          AI 폰트 추천
+      <div style={{ textAlign: 'center', marginBottom: 40 }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          padding: '6px 14px', borderRadius: 100, marginBottom: 20,
+          background: 'rgba(30,144,255,0.08)', border: '1px solid rgba(30,144,255,0.2)',
+          color: '#1E90FF', fontSize: 13, fontWeight: 600,
+        }}>
+          <Sparkles size={13} /> AI 폰트 추천
         </div>
-        <h1 className="font-display text-4xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>
+        <h1 style={{ fontSize: 40, fontWeight: 800, color: '#0f172a', marginBottom: 12, letterSpacing: '-0.02em' }}>
           어떤 폰트를 찾고 계세요?
         </h1>
-        <p style={{ color: 'var(--text-secondary)' }}>
-          사용 목적, 분위기, 스타일을 자유롭게 설명해주세요.
-          <br />
+        <p style={{ fontSize: 16, color: '#64748b', lineHeight: 1.7 }}>
+          사용 목적, 분위기, 스타일을 자유롭게 설명해주세요.<br />
           AI가 딱 맞는 폰트를 추천해드립니다.
         </p>
       </div>
 
       {/* 입력창 */}
-      <form onSubmit={handleSubmit} className="mb-8 animate-fade-up delay-100">
-        <div
-          className="rounded-2xl overflow-hidden"
-          style={{ border: '1.5px solid var(--border)', background: 'rgba(255,255,255,0.3)' }}
-        >
+      <form onSubmit={handleSubmit} style={{ marginBottom: 32 }}>
+        <div style={{
+          borderRadius: 16, overflow: 'hidden',
+          border: '1.5px solid #e2e8f0',
+          background: '#ffffff',
+          boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+        }}>
           <textarea
             value={prompt}
             onChange={e => setPrompt(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault()
-                handleSubmit()
-              }
-            }}
-            placeholder="예: 따뜻하고 친근한 느낌의 카페 브랜딩용 한글 폰트를 찾고 있어요. 손글씨 느낌이면 더 좋겠어요."
+            onKeyDown={e => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handleSubmit()} }}
+            placeholder="예: 따뜻하고 친근한 느낌의 카페 브랜딩용 한글 폰트를 찾고 있어요."
             rows={3}
-            className="w-full p-4 bg-transparent text-sm outline-none resize-none"
-            style={{ color: 'var(--text-primary)' }}
+            style={{
+              width: '100%', padding: '18px 20px',
+              background: 'transparent', border: 'none', outline: 'none',
+              fontSize: 15, color: '#0f172a', resize: 'none', boxSizing: 'border-box',
+            }}
           />
-          <div
-            className="flex items-center justify-between px-4 py-3 border-t"
-            style={{ borderColor: 'var(--border)' }}
-          >
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-              Enter로 전송 · Shift+Enter로 줄바꿈
-            </p>
-            <button
-              type="submit"
-              disabled={!prompt.trim() || loading}
-              className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-40"
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '12px 16px', borderTop: '1px solid #f1f5f9',
+          }}>
+            <p style={{ fontSize: 12, color: '#94a3b8' }}>Enter로 전송 · Shift+Enter로 줄바꿈</p>
+            <button type="submit" disabled={!prompt.trim()||loading}
               style={{
-                background: 'var(--accent)',
-                color: 'white',
-              }}
-            >
-              {loading ? (
-                <>
-                  <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                  분석 중...
-                </>
-              ) : (
-                <>
-                  <Send size={13} />
-                  추천받기
-                </>
-              )}
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '9px 20px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+                border: 'none', cursor: 'pointer', transition: 'all 0.15s',
+                background: '#1E90FF', color: '#ffffff',
+                opacity: (!prompt.trim()||loading) ? 0.5 : 1,
+              }}>
+              {loading
+                ? <><span style={{ width:14,height:14,borderRadius:'50%',border:'2px solid rgba(255,255,255,0.3)',borderTopColor:'white',animation:'spin 0.8s linear infinite',display:'inline-block' }}/>분석 중...</>
+                : <><Send size={13}/>추천받기</>}
             </button>
           </div>
         </div>
@@ -122,26 +96,22 @@ export default function AIPage() {
 
       {/* 예시 프롬프트 */}
       {!result && !loading && (
-        <div className="animate-fade-up delay-200">
-          <div className="flex items-center gap-2 mb-3">
-            <Lightbulb size={14} style={{ color: 'var(--text-muted)' }} />
-            <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>
-              이런 것도 물어볼 수 있어요
-            </span>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+            <Lightbulb size={13} style={{ color: '#94a3b8' }} />
+            <span style={{ fontSize: 12, fontWeight: 500, color: '#94a3b8' }}>이런 것도 물어볼 수 있어요</span>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {EXAMPLE_PROMPTS.map(ex => (
-              <button
-                key={ex}
-                onClick={() => handleExample(ex)}
-                className="flex items-center gap-2 p-3 rounded-xl text-left text-sm transition-all hover:border-sky-accent"
+              <button key={ex} onClick={() => setPrompt(ex)}
                 style={{
-                  background: 'rgba(255,255,255,0.25)',
-                  border: '1px solid var(--border)',
-                  color: 'var(--text-secondary)',
-                }}
-              >
-                <ArrowRight size={12} style={{ flexShrink: 0, color: 'var(--accent)' }} />
+                  display: 'flex', alignItems: 'center', gap: 8,
+                  padding: '12px 14px', borderRadius: 12, textAlign: 'left',
+                  border: '1.5px solid #e2e8f0', background: '#ffffff',
+                  fontSize: 13, color: '#475569', cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}>
+                <ArrowRight size={12} style={{ color: '#1E90FF', flexShrink: 0 }} />
                 {ex}
               </button>
             ))}
@@ -151,72 +121,56 @@ export default function AIPage() {
 
       {/* 에러 */}
       {error && (
-        <div
-          className="p-4 rounded-xl text-sm animate-fade-in"
-          style={{
-            background: 'rgba(239,68,68,0.08)',
-            border: '1px solid rgba(239,68,68,0.2)',
-            color: '#dc2626',
-          }}
-        >
+        <div style={{
+          padding: '14px 18px', borderRadius: 12,
+          background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 14,
+        }}>
           {error}
         </div>
       )}
 
       {/* 결과 */}
       {result && (
-        <div className="space-y-6 animate-fade-up">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* AI 설명 */}
-          <div
-            className="p-5 rounded-2xl"
-            style={{
-              background: 'rgba(30,144,255,0.06)',
-              border: '1px solid rgba(30,144,255,0.15)',
-            }}
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <Sparkles size={15} style={{ color: 'var(--accent)' }} />
-              <span className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>
-                AI 추천 이유
-              </span>
+          <div style={{
+            padding: '20px', borderRadius: 16,
+            background: 'rgba(30,144,255,0.04)', border: '1px solid rgba(30,144,255,0.12)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+              <Sparkles size={14} style={{ color: '#1E90FF' }} />
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#1E90FF' }}>AI 추천 이유</span>
             </div>
-            <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
-              {result.reasoning}
-            </p>
+            <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.7 }}>{result.reasoning}</p>
             {result.pairing_tip && (
-              <p
-                className="text-sm mt-3 pt-3 border-t leading-relaxed"
-                style={{ borderColor: 'rgba(30,144,255,0.15)', color: 'var(--text-muted)' }}
-              >
+              <p style={{
+                fontSize: 13, color: '#64748b', marginTop: 10, paddingTop: 10,
+                borderTop: '1px solid rgba(30,144,255,0.1)',
+              }}>
                 💡 {result.pairing_tip}
               </p>
             )}
           </div>
 
-          {/* 추천 폰트 카드 */}
+          {/* 폰트 카드 */}
           {result.fonts && result.fonts.length > 0 && (
             <div>
-              <p className="text-sm font-medium mb-4" style={{ color: 'var(--text-muted)' }}>
+              <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 14 }}>
                 추천 폰트 {result.fonts.length}개
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {result.fonts.map((font, i) => (
-                  <FontCard key={font.id} font={font} animationDelay={i * 80} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(280px,1fr))', gap: 16 }}>
+                {result.fonts.map(font => (
+                  <FontCard key={font.id} font={font} />
                 ))}
               </div>
             </div>
           )}
 
-          {/* 다시 검색 */}
-          <button
-            onClick={() => { setResult(null); setPrompt('') }}
-            className="w-full py-3 rounded-xl text-sm font-medium transition-all hover:opacity-80"
+          <button onClick={() => { setResult(null); setPrompt('') }}
             style={{
-              background: 'rgba(255,255,255,0.3)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-secondary)',
-            }}
-          >
+              width: '100%', padding: '12px', borderRadius: 12, fontSize: 13, fontWeight: 500,
+              border: '1.5px solid #e2e8f0', background: '#ffffff', color: '#64748b', cursor: 'pointer',
+            }}>
             다시 추천받기
           </button>
         </div>

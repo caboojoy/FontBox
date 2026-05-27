@@ -1,8 +1,8 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { Shuffle, Copy, Check } from 'lucide-react'
-import { fontsDb as supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { Font } from '@/types'
 import { generateCSSCode } from '@/lib/fonts'
 
@@ -71,91 +71,143 @@ export default function PairingPage() {
 
   const copyCSS = () => {
     if(!koFont||!enFont) return
-    const css = `/* 한글: ${koFont.name} */\n${generateCSSCode(koFont)}\n\n/* 영문: ${enFont.name} */\n${generateCSSCode(enFont)}\n\n/* 혼용 */\nbody { font-family: '${enFont.css_family}', '${koFont.css_family}', sans-serif; }`
+    const css = `/* 한글: ${koFont.name} */\n${generateCSSCode(koFont)}\n\n/* 영문: ${enFont.name} */\n${generateCSSCode(enFont)}`
     navigator.clipboard.writeText(css)
     setCopied(true); setTimeout(()=>setCopied(false),2000)
   }
 
-  const fontStyle = (loaded:boolean, family?:string) =>
-    loaded && family ? `'${family}', sans-serif` : 'inherit'
+  const fontFamily = (koLoaded && enLoaded && koFont && enFont)
+    ? `'${enFont.css_family}', '${koFont.css_family}', sans-serif`
+    : 'inherit'
+
+  const btnStyle = (active: boolean) => ({
+    padding: '6px 14px',
+    borderRadius: 100,
+    fontSize: 13,
+    fontWeight: active ? 600 : 500,
+    border: active ? '1.5px solid #1E90FF' : '1.5px solid #e2e8f0',
+    background: active ? '#1E90FF' : '#ffffff',
+    color: active ? '#ffffff' : '#64748b',
+    cursor: 'pointer',
+    transition: 'all 0.18s',
+    boxShadow: active ? '0 2px 10px rgba(30,144,255,0.25)' : 'none',
+  })
 
   return (
-    <div className="max-w-5xl mx-auto px-4 pt-24 pb-16">
-      <div className="text-center mb-10 animate-fade-up">
-        <h1 className="font-display text-4xl font-bold mb-3" style={{color:'var(--text-primary)'}}>폰트 페어링</h1>
-        <p style={{color:'var(--text-secondary)'}}>한글+영문 폰트 조합을 실시간으로 미리보세요</p>
+    <div style={{ maxWidth: 1024, margin: '0 auto', padding: '96px 24px 80px' }}>
+
+      {/* 헤더 */}
+      <div style={{ textAlign: 'center', marginBottom: 40 }}>
+        <h1 style={{ fontSize: 40, fontWeight: 800, color: '#0f172a', marginBottom: 10, letterSpacing: '-0.02em' }}>
+          폰트 페어링
+        </h1>
+        <p style={{ fontSize: 16, color: '#64748b' }}>한글 + 영문 폰트 조합을 실시간으로 미리보세요</p>
       </div>
 
-      <div className="flex flex-wrap gap-2 justify-center mb-8 animate-fade-up delay-100">
-        {PAIRING_SUGGESTIONS.map(s=>(
-          <button key={s.label} onClick={()=>{setKoSlug(s.ko);setEnSlug(s.en)}}
-            className={`filter-btn ${koSlug===s.ko&&enSlug===s.en?'active':''}`}>{s.label}</button>
+      {/* 추천 조합 버튼 */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginBottom: 32 }}>
+        {PAIRING_SUGGESTIONS.map(s => (
+          <button key={s.label} onClick={() => { setKoSlug(s.ko); setEnSlug(s.en) }}
+            style={btnStyle(koSlug===s.ko && enSlug===s.en)}>
+            {s.label}
+          </button>
         ))}
-        <button onClick={randomize} className="filter-btn flex items-center gap-1">
-          <Shuffle size={12}/> 랜덤
+        <button onClick={randomize}
+          style={{ ...btnStyle(false), display: 'flex', alignItems: 'center', gap: 5 }}>
+          <Shuffle size={12} /> 랜덤
         </button>
       </div>
 
-      <div className="font-card p-8 mb-6 animate-fade-up delay-200">
-        <div className="flex items-center gap-4 mb-6">
+      {/* 미리보기 카드 */}
+      <div style={{
+        background: '#ffffff', borderRadius: 20,
+        border: '1.5px solid #e2e8f0',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+        padding: '32px', marginBottom: 24,
+      }}>
+        {/* 크기 슬라이더 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
           <input type="range" min={20} max={72} value={size}
-            onChange={e=>setSize(Number(e.target.value))} className="flex-1 accent-sky-accent"/>
-          <span className="text-sm w-12 text-right tabular-nums" style={{color:'var(--text-muted)'}}>{size}px</span>
+            onChange={e => setSize(Number(e.target.value))}
+            style={{ flex: 1, accentColor: '#1E90FF' }} />
+          <span style={{ fontSize: 13, color: '#94a3b8', width: 40, textAlign: 'right' }}>{size}px</span>
         </div>
-        {PREVIEW_SENTENCES.map(s=>(
-          <div key={s} onClick={()=>setSentence(s)}
-            className="preview-text mb-3 cursor-pointer rounded-lg px-2 py-1 transition-all hover:bg-white/20"
+
+        {/* 미리보기 문장들 */}
+        {PREVIEW_SENTENCES.map(s => (
+          <div key={s} onClick={() => setSentence(s)}
             style={{
-              fontFamily: fontStyle(koLoaded&&enLoaded, enFont?.css_family ? `${enFont.css_family}', '${koFont?.css_family}` : undefined),
-              fontSize:`${size}px`,
-              color:sentence===s?'var(--accent)':'var(--text-primary)',
-              lineHeight:1.3,
+              fontFamily,
+              fontSize: size,
+              color: sentence === s ? '#1E90FF' : '#0f172a',
+              lineHeight: 1.35,
+              marginBottom: 12,
+              cursor: 'pointer',
+              padding: '4px 8px',
+              borderRadius: 8,
+              background: sentence === s ? 'rgba(30,144,255,0.04)' : 'transparent',
+              transition: 'all 0.15s',
             }}>
             {s}
           </div>
         ))}
-        <div className="mt-6 pt-4 border-t flex items-center justify-between" style={{borderColor:'var(--border)'}}>
-          <div className="flex gap-6">
+
+        {/* 폰트 정보 + CSS 복사 */}
+        <div style={{
+          marginTop: 24, paddingTop: 20,
+          borderTop: '1px solid #f1f5f9',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          flexWrap: 'wrap', gap: 12,
+        }}>
+          <div style={{ display: 'flex', gap: 24 }}>
             <div>
-              <p className="text-xs mb-1" style={{color:'var(--text-muted)'}}>한글</p>
-              <p className="text-sm font-medium" style={{color:'var(--text-primary)'}}>{koFont?.name||'–'}</p>
+              <p style={{ fontSize: 11, color: '#94a3b8', marginBottom: 3 }}>한글</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{koFont?.name || '–'}</p>
             </div>
             <div>
-              <p className="text-xs mb-1" style={{color:'var(--text-muted)'}}>영문</p>
-              <p className="text-sm font-medium" style={{color:'var(--text-primary)'}}>{enFont?.name||'–'}</p>
+              <p style={{ fontSize: 11, color: '#94a3b8', marginBottom: 3 }}>영문</p>
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#0f172a' }}>{enFont?.name || '–'}</p>
             </div>
           </div>
           <button onClick={copyCSS} disabled={!koFont||!enFont}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium disabled:opacity-40"
-            style={{background:'var(--accent)',color:'white'}}>
-            {copied?<Check size={14}/>:<Copy size={14}/>} CSS 복사
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              padding: '9px 18px', borderRadius: 10, fontSize: 13, fontWeight: 600,
+              border: 'none', cursor: 'pointer',
+              background: copied ? '#16a34a' : '#1E90FF',
+              color: '#ffffff', transition: 'all 0.15s',
+              opacity: (!koFont||!enFont) ? 0.4 : 1,
+            }}>
+            {copied ? <><Check size={14}/>복사됨</> : <><Copy size={14}/>CSS 복사</>}
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-up delay-300">
+      {/* 폰트 선택 */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
         {[
-          {title:'한글 폰트', fonts:koFonts, slug:koSlug, onSelect:setKoSlug},
-          {title:'영문 폰트', fonts:enFonts, slug:enSlug, onSelect:setEnSlug},
-        ].map(({title,fonts,slug,onSelect})=>(
+          { title: '한글 폰트', fonts: koFonts, slug: koSlug, onSelect: setKoSlug, color: '#1E90FF' },
+          { title: '영문 폰트', fonts: enFonts, slug: enSlug, onSelect: setEnSlug, color: '#22c55e' },
+        ].map(({ title, fonts, slug, onSelect, color }) => (
           <div key={title}>
-            <h3 className="text-sm font-medium mb-3" style={{color:'var(--text-muted)'}}>{title}</h3>
-            <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
-              {fonts.map(f=>(
-                <button key={f.slug} onClick={()=>onSelect(f.slug)}
-                  className="w-full text-left px-4 py-3 rounded-xl transition-all"
+            <p style={{ fontSize: 13, fontWeight: 600, color: '#64748b', marginBottom: 10 }}>{title}</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 280, overflowY: 'auto' }}>
+              {fonts.length === 0 ? (
+                <p style={{ fontSize: 13, color: '#94a3b8', padding: '12px 0' }}>로딩 중...</p>
+              ) : fonts.map(f => (
+                <button key={f.slug} onClick={() => onSelect(f.slug)}
                   style={{
-                    background:slug===f.slug?'rgba(30,144,255,0.12)':'rgba(255,255,255,0.2)',
-                    border:`1px solid ${slug===f.slug?'var(--accent)':'var(--border)'}`,
-                    color:slug===f.slug?'var(--accent)':'var(--text-secondary)',
+                    textAlign: 'left', padding: '10px 14px', borderRadius: 10,
+                    border: slug===f.slug ? `1.5px solid ${color}` : '1.5px solid #e2e8f0',
+                    background: slug===f.slug ? `${color}0a` : '#ffffff',
+                    color: slug===f.slug ? color : '#475569',
+                    cursor: 'pointer', fontSize: 13, fontWeight: 500,
+                    transition: 'all 0.15s',
                   }}>
-                  <span className="text-sm font-medium">{f.name}</span>
-                  <span className="text-xs ml-2 opacity-60">{f.category}</span>
+                  <span style={{ fontWeight: 600 }}>{f.name}</span>
+                  <span style={{ fontSize: 11, opacity: 0.6, marginLeft: 6 }}>{f.category}</span>
                 </button>
               ))}
-              {fonts.length===0 && (
-                <p className="text-sm text-center py-4" style={{color:'var(--text-muted)'}}>로딩 중...</p>
-              )}
             </div>
           </div>
         ))}

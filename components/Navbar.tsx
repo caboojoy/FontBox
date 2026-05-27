@@ -3,117 +3,114 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { Moon, Sun, Heart, Sparkles, Menu, X, Type } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { Heart, Sparkles, Menu, X, Type } from 'lucide-react'
 
 export default function Navbar() {
-  const pathname = usePathname()
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
+  const pathname  = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
     const onScroll = () => setScrolled(window.scrollY > 10)
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   const links = [
-    { href: '/', label: '폰트 모음' },
-    { href: '/pairing', label: '페어링' },
-    { href: '/ai', label: 'AI 추천', icon: Sparkles },
-    { href: '/favorites', label: '즐겨찾기', icon: Heart },
-    { href: '/admin', label: '관리' },
+    { href: '/',         label: '폰트 모음' },
+    { href: '/pairing',  label: '페어링' },
+    { href: '/ai',       label: 'AI 추천',  icon: Sparkles },
+    { href: '/favorites',label: '즐겨찾기', icon: Heart },
+    { href: '/admin',    label: '관리' },
   ]
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled ? 'nav-blur shadow-sm' : 'bg-transparent'
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16">
+    <nav style={{
+      position: 'fixed',
+      top: 0, left: 0, right: 0,
+      zIndex: 50,
+      background: scrolled ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0.7)',
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      borderBottom: scrolled ? '1px solid #e2e8f0' : '1px solid transparent',
+      transition: 'all 0.3s ease',
+    }}>
+      <div style={{ maxWidth: 1280, margin: '0 auto', padding: '0 24px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
+
           {/* 로고 */}
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-sky-accent flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-              <Type size={16} className="text-white" />
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
+            <div style={{
+              width: 32, height: 32, borderRadius: 8,
+              background: 'linear-gradient(135deg, #1E90FF, #7c3aed)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 2px 8px rgba(30,144,255,0.3)',
+            }}>
+              <Type size={15} color="white" />
             </div>
-            <span
-              className="font-display font-semibold text-lg"
-              style={{ color: 'var(--text-primary)' }}
-            >
+            <span style={{ fontWeight: 700, fontSize: 17, color: '#0f172a', letterSpacing: '-0.01em' }}>
               FontBox
             </span>
           </Link>
 
           {/* 데스크탑 네비 */}
-          <div className="hidden md:flex items-center gap-1">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}
+               className="hidden md:flex">
             {links.map(({ href, label, icon: Icon }) => {
               const active = pathname === href
               return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                    active
-                      ? 'bg-sky-accent text-white shadow-sm'
-                      : 'hover:bg-white/30'
-                  }`}
-                  style={{ color: active ? 'white' : 'var(--text-secondary)' }}
-                >
-                  {Icon && <Icon size={14} />}
+                <Link key={href} href={href} style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '7px 14px', borderRadius: 100,
+                  fontSize: 14, fontWeight: 500,
+                  textDecoration: 'none',
+                  transition: 'all 0.2s',
+                  background: active ? '#1E90FF' : 'transparent',
+                  color: active ? '#ffffff' : '#475569',
+                  boxShadow: active ? '0 2px 8px rgba(30,144,255,0.3)' : 'none',
+                }}>
+                  {Icon && <Icon size={13} />}
                   {label}
                 </Link>
               )
             })}
           </div>
 
-          {/* 다크모드 토글 + 모바일 메뉴 */}
-          <div className="flex items-center gap-2">
-            {mounted && (
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="w-9 h-9 rounded-full flex items-center justify-center transition-all hover:bg-white/30"
-                style={{ color: 'var(--text-secondary)' }}
-                aria-label="다크모드 전환"
-              >
-                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-              </button>
-            )}
-
-            {/* 모바일 메뉴 버튼 */}
-            <button
-              className="md:hidden w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/30"
-              style={{ color: 'var(--text-secondary)' }}
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              {menuOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
-          </div>
+          {/* 모바일 메뉴 버튼 */}
+          <button
+            className="md:hidden"
+            onClick={() => setMenuOpen(!menuOpen)}
+            style={{
+              width: 36, height: 36, borderRadius: '50%',
+              border: '1px solid #e2e8f0', background: '#f8fafc',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', color: '#475569',
+            }}
+          >
+            {menuOpen ? <X size={16} /> : <Menu size={16} />}
+          </button>
         </div>
 
         {/* 모바일 메뉴 */}
         {menuOpen && (
-          <div
-            className="md:hidden py-3 pb-4 border-t animate-fade-in"
-            style={{ borderColor: 'var(--border)' }}
-          >
+          <div style={{
+            paddingBottom: 12,
+            borderTop: '1px solid #f1f5f9',
+          }}>
             {links.map(({ href, label, icon: Icon }) => {
               const active = pathname === href
               return (
-                <Link
-                  key={href}
-                  href={href}
+                <Link key={href} href={href}
                   onClick={() => setMenuOpen(false)}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-xl mx-1 text-sm font-medium transition-all ${
-                    active ? 'bg-sky-accent text-white' : 'hover:bg-white/30'
-                  }`}
-                  style={{ color: active ? 'white' : 'var(--text-secondary)' }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '10px 12px', borderRadius: 10, margin: '2px 0',
+                    fontSize: 14, fontWeight: 500, textDecoration: 'none',
+                    background: active ? '#1E90FF' : 'transparent',
+                    color: active ? '#ffffff' : '#475569',
+                  }}
                 >
-                  {Icon && <Icon size={15} />}
+                  {Icon && <Icon size={14} />}
                   {label}
                 </Link>
               )

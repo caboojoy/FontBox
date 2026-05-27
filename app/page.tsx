@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import FontCard from '@/components/FontCard'
 import FilterBar from '@/components/FilterBar'
 import PreviewControl from '@/components/PreviewControl'
 import { Font, FontFilters } from '@/types'
-import { fontsDb as supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 
 const DEFAULT_FILTERS: FontFilters = {
   language: 'all',
@@ -15,7 +15,6 @@ const DEFAULT_FILTERS: FontFilters = {
   search: '',
 }
 
-// ilike 특수문자 이스케이프 (서버 액션과 동일하게 적용)
 function escapeLike(s: string): string {
   return s.replace(/[%_\\]/g, '\\$&')
 }
@@ -23,64 +22,83 @@ function escapeLike(s: string): string {
 export default function HomePage() {
   const [fonts, setFonts]     = useState<Font[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState<string | null>(null)
   const [filters, setFilters] = useState<FontFilters>(DEFAULT_FILTERS)
   const [previewText, setPreviewText] = useState('')
   const [previewSize, setPreviewSize] = useState(28)
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
-  const prevSearchRef = useRef('')  // 이전 검색어 추적 (디바운스 판단용)
+  const prevSearchRef = useRef('')
+  const isMounted = useRef(true)
+
+  useEffect(() => {
+    isMounted.current = true
+    return () => { isMounted.current = false }
+  }, [])
 
   useEffect(() => {
     const saved = localStorage.getItem('fontbox_favorites')
     if (saved) setFavorites(new Set(JSON.parse(saved)))
   }, [])
 
-  const fetchFonts = useCallback(async (currentFilters: FontFilters) => {
-    setLoading(true)
-
-    let query = supabase.from('fonts').select('*')
-
-    if (currentFilters.language !== 'all') {
-      if (currentFilters.language === 'korean')  query = query.eq('supports_korean', true)
-      if (currentFilters.language === 'english') query = query.eq('supports_latin', true).neq('language', 'korean')
-      if (currentFilters.language === 'both')    query = query.eq('language', 'both')
-    }
-    if (currentFilters.category !== 'all') query = query.eq('category', currentFilters.category)
-    if (currentFilters.license  !== 'all') query = query.eq('license',  currentFilters.license)
-
-    if (currentFilters.search.trim()) {
-      const q = escapeLike(currentFilters.search.trim())
-      query = query.or(`name.ilike.%${q}%,designer.ilike.%${q}%`)
-    }
-
-    switch (currentFilters.sort) {
-      case 'popular': query = query.order('download_count', { ascending: false }); break
-      case 'newest':  query = query.order('created_at',     { ascending: false }); break
-      case 'name':    query = query.order('name',           { ascending: true  }); break
-      default:
-        query = query
-          .order('is_featured',    { ascending: false })
-          .order('download_count', { ascending: false })
-    }
-
-    const { data, error } = await query
-
-    if (error) {
-      console.error('🔴 Supabase 쿼리 오류:', error.message, error)
-    }
-
-    setFonts((data as Font[]) || [])
-    setLoading(false)
-  }, [supabase])  // supabase 인스턴스는 안정적이므로 의존성 최소화
-
+  // 폰트 조회 — useCallback 제거, 직접 useEffect에서 실행
   useEffect(() => {
-    // 검색어 변경이면 300ms 디바운스, 그 외 필터 변경은 즉시 실행
     const searchChanged = filters.search !== prevSearchRef.current
     prevSearchRef.current = filters.search
-
     const delay = searchChanged ? 300 : 0
-    const timer = setTimeout(() => fetchFonts(filters), delay)
+
+    const timer = setTimeout(async () => {
+      setLoading(true)
+      setError(null)
+
+      try {
+        let query = supabase.from('fonts').select('*')
+
+        if (filters.language !== 'all') {
+          if (filters.language === 'korean')  query = query.eq('supports_korean', true)
+          if (filters.language === 'english') query = query.eq('supports_latin', true).neq('language', 'korean')
+          if (filters.language === 'both')    query = query.eq('language', 'both')
+        }
+        if (filters.category !== 'all') query = query.eq('category', filters.category)
+        if (filters.license  !== 'all') query = query.eq('license',  filters.license)
+
+        if (filters.search.trim()) {
+          const q = escapeLike(filters.search.trim())
+          query = query.or(`name.ilike.%${q}%,designer.ilike.%${q}%`)
+        }
+
+        switch (filters.sort) {
+          case 'popular': query = query.order('download_count', { ascending: false }); break
+          case 'newest':  query = query.order('created_at',     { ascending: false }); break
+          case 'name':    query = query.order('name',           { ascending: true  }); break
+          default:
+            query = query
+              .order('is_featured',    { ascending: false })
+              .order('download_count', { ascending: false })
+        }
+
+        const { data, error: qErr } = await query
+
+        if (!isMounted.current) return
+
+        if (qErr) {
+          console.error('Supabase error:', qErr)
+          setError(`DB 오류: ${qErr.message}`)
+          setFonts([])
+        } else {
+          setFonts((data as Font[]) || [])
+        }
+      } catch (e) {
+        if (!isMounted.current) return
+        const msg = e instanceof Error ? e.message : '알 수 없는 오류'
+        setError(`오류: ${msg}`)
+        setFonts([])
+      } finally {
+        if (isMounted.current) setLoading(false)
+      }
+    }, delay)
+
     return () => clearTimeout(timer)
-  }, [filters, fetchFonts])
+  }, [filters])
 
   const handleFilterChange = (partial: Partial<FontFilters>) => {
     setFilters(prev => ({ ...prev, ...partial }))
@@ -97,26 +115,61 @@ export default function HomePage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-16">
+    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '96px 24px 80px' }}>
+
       {/* 히어로 */}
-      <div className="text-center mb-12">
-        <h1
-          className="font-display text-5xl sm:text-6xl font-bold mb-4 leading-tight"
-          style={{ color: 'var(--text-primary)' }}
-        >
-          Find Your
-          <span style={{ color: 'var(--accent)' }}> Perfect</span>
-          <br />Font
+      <div style={{ textAlign: 'center', marginBottom: 56 }}>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          padding: '6px 14px', borderRadius: 100, marginBottom: 24,
+          background: 'rgba(30,144,255,0.08)',
+          border: '1px solid rgba(30,144,255,0.2)',
+          color: '#1E90FF', fontSize: 13, fontWeight: 600,
+        }}>
+          ✦ 한글 · 영문 무료 웹폰트 모음
+        </div>
+
+        <h1 style={{
+          fontSize: 'clamp(40px, 6vw, 72px)',
+          fontWeight: 800, lineHeight: 1.15,
+          letterSpacing: '-0.02em', color: '#0f172a', marginBottom: 20,
+        }}>
+          Find Your{' '}
+          <span style={{
+            background: 'linear-gradient(135deg, #1E90FF, #7c3aed)',
+            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          }}>
+            Perfect
+          </span>{' '}Font
         </h1>
-        <p className="text-lg max-w-xl mx-auto" style={{ color: 'var(--text-secondary)' }}>
-          한글과 영문 무료 웹폰트를 한 곳에서.
-          <br />
-          실시간 미리보기와 AI 추천으로 빠르게 찾아보세요.
+
+        <p style={{ fontSize: 18, color: '#475569', maxWidth: 480, margin: '0 auto', lineHeight: 1.7 }}>
+          실시간 미리보기와 AI 추천으로<br />딱 맞는 폰트를 빠르게 찾아보세요
         </p>
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 32, marginTop: 32 }}>
+          {[
+            { num: '55+', label: '무료 폰트' },
+            { num: 'AI',  label: '폰트 추천' },
+            { num: '즉시', label: 'CSS 복사' },
+          ].map(({ num, label }) => (
+            <div key={label} style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 22, fontWeight: 700, color: '#0f172a' }}>{num}</div>
+              <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>{label}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* 미리보기 텍스트 입력 */}
-      <div className="max-w-2xl mx-auto mb-10">
+      {/* 구분선 */}
+      <div style={{
+        height: 1,
+        background: 'linear-gradient(90deg, transparent, #e2e8f0, transparent)',
+        marginBottom: 36,
+      }} />
+
+      {/* 미리보기 입력 */}
+      <div style={{ maxWidth: 640, margin: '0 auto 32px' }}>
         <PreviewControl
           onTextChange={setPreviewText}
           onSizeChange={setPreviewSize}
@@ -125,34 +178,44 @@ export default function HomePage() {
       </div>
 
       {/* 필터 */}
-      <div className="mb-8">
-        <FilterBar
-          filters={filters}
-          onChange={handleFilterChange}
-          totalCount={fonts.length}
-        />
+      <div style={{ marginBottom: 32 }}>
+        <FilterBar filters={filters} onChange={handleFilterChange} totalCount={fonts.length} />
       </div>
+
+      {/* DB 오류 표시 */}
+      {error && (
+        <div style={{
+          padding: '14px 18px', borderRadius: 12, marginBottom: 24,
+          background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 14,
+        }}>
+          ⚠️ {error}
+          <br />
+          <span style={{ fontSize: 12, color: '#ef4444', marginTop: 4, display: 'block' }}>
+            Supabase에서 ALTER TABLE 명령어를 실행했는지 확인하세요.
+          </span>
+        </div>
+      )}
 
       {/* 폰트 그리드 */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="skeleton rounded-2xl h-52" />
+            <div key={i} style={{
+              height: 280, borderRadius: 16,
+              background: 'linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%)',
+              animation: 'shimmer 1.5s infinite',
+            }} />
           ))}
         </div>
-      ) : fonts.length === 0 ? (
-        <div className="text-center py-24">
-          <p className="text-4xl mb-4">🔍</p>
-          <p className="text-lg font-medium" style={{ color: 'var(--text-secondary)' }}>
-            검색 결과가 없습니다
-          </p>
-          <p className="text-sm mt-2" style={{ color: 'var(--text-muted)' }}>
-            다른 키워드나 필터를 시도해보세요
-          </p>
+      ) : fonts.length === 0 && !error ? (
+        <div style={{ textAlign: 'center', padding: '80px 0' }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+          <p style={{ fontSize: 18, fontWeight: 600, color: '#334155' }}>검색 결과가 없습니다</p>
+          <p style={{ fontSize: 14, color: '#94a3b8', marginTop: 8 }}>다른 키워드나 필터를 시도해보세요</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {fonts.map((font, i) => (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+          {fonts.map((font) => (
             <FontCard
               key={font.id}
               font={font}
@@ -160,7 +223,6 @@ export default function HomePage() {
               previewSize={previewSize}
               isFavorited={favorites.has(font.slug)}
               onToggleFavorite={handleToggleFavorite}
-              animationDelay={i * 50}
             />
           ))}
         </div>

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { ThemeProvider } from 'next-themes'
+import Providers from '@/components/Providers'
 import Navbar from '@/components/Navbar'
 import './globals.css'
 
@@ -31,23 +31,32 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <Providers>
           <div className="relative z-10">
             <Navbar />
             <main className="min-h-screen">{children}</main>
-            <footer className="py-12 mt-16 border-t" style={{ borderColor: 'var(--border)' }}>
-              <div className="max-w-7xl mx-auto px-4 text-center">
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+            <footer style={{
+              padding: '48px 24px',
+              marginTop: 64,
+              borderTop: '1px solid #e2e8f0',
+            }}>
+              <div style={{
+                maxWidth: 1280,
+                margin: '0 auto',
+                textAlign: 'center',
+              }}>
+                <p style={{ fontSize: 13, color: '#94a3b8' }}>
                   © 2025 FontBox. 모든 폰트의 저작권은 각 폰트 저작권자에게 있습니다.
                 </p>
-                <p className="text-xs mt-2" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
-                  Made with ☁️ sky blue
+                <p style={{ fontSize: 12, color: '#94a3b8', opacity: 0.6, marginTop: 6 }}>
+                  Made with 🔤 FontBox
                 </p>
               </div>
             </footer>
           </div>
-        </ThemeProvider>
+        </Providers>
       </body>
     </html>
   )
 }
+
