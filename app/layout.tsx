@@ -3,7 +3,7 @@ import Providers from '@/components/Providers'
 import Navbar from '@/components/Navbar'
 import './globals.css'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.vercel.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://myfontbox.vercel.app'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
