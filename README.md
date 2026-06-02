@@ -1,87 +1,88 @@
-# FontBox — 한글·영문 무료 웹폰트 플랫폼
+# caboo.net — 메인 도메인 웹사이트
 
-> 포트폴리오용 · 운영비 0원 · Supabase 기반 · git push 없이 폰트 추가 가능
+회계사가 만드는 AI 도구들 · 1인 소프트웨어 스튜디오
 
----
-
-## 💰 비용 구조 (연간 ~$0)
-
-| 서비스 | 용도 | 비용 |
-|--------|------|------|
-| Vercel Hobby | 호스팅 + 자동 배포 | $0 |
-| Supabase Free | 폰트 DB + AI 캐시 + 즐겨찾기 | $0 |
-| Google Fonts CDN | 폰트 파일 서빙 | $0 |
-| Anthropic API | AI 추천 (캐싱으로 최소화) | ~$0.003/신규 요청 |
-
----
-
-## ⚡ 셋업 순서
+## 빠른 시작
 
 ```bash
-# 1. 의존성 설치
+# 1. 패키지 설치
 npm install
 
-# 2. 환경 변수
-cp .env.example .env.local
-# → NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, ANTHROPIC_API_KEY 입력
-
-# 3. Supabase 초기화 (순서 중요)
-# Supabase 대시보드 > SQL Editor 에서:
-# (1) supabase/schema.sql 실행
-# (2) supabase/seed.sql 실행  ← 초기 폰트 57개 삽입 (한 번만)
-
-# 4. 실행
+# 2. 개발 서버 실행
 npm run dev
+# → http://localhost:3000 접속
 ```
 
----
+## Vercel 배포
 
-## ➕ 폰트 추가 방법 (git push 불필요!)
+```bash
+# Vercel CLI 설치 (최초 1회)
+npm i -g vercel
 
-### 방법 A — /admin 페이지 (가장 쉬움)
-1. `/admin` 접속
-2. "새 폰트 추가" 탭에서 폼 입력
-3. "Supabase에 저장" 클릭
-4. **즉시 반영** — 재배포 없음
-
-### 방법 B — Supabase 대시보드
-1. Supabase > Table Editor > fonts 테이블
-2. "Insert row" 클릭 후 직접 입력
-3. 저장 즉시 반영
-
-### Google Fonts URL 패턴
-```
-https://fonts.googleapis.com/css2?family=폰트명+치환:wght@400;700&display=swap
-예) Noto Sans KR → family=Noto+Sans+KR:wght@300;400;700&display=swap
+# 배포
+vercel
 ```
 
----
+또는 GitHub 리포에 push → Vercel 대시보드에서 자동 배포
 
-## 📁 구조
+## 환경 변수 (.env.local)
+
+```env
+# AI 뉴스봇 연동 시 추가 (현재 미사용)
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+## 프로젝트 구조
 
 ```
-fontbox/
-├── supabase/
-│   ├── schema.sql    DB 스키마 (최초 1회 실행)
-│   └── seed.sql      초기 폰트 57개 (최초 1회 실행)
-├── actions/
-│   ├── fonts.ts      폰트 CRUD Server Actions
-│   └── ai.ts         AI 추천 (캐싱 포함)
+caboo-main/
 ├── app/
-│   ├── page.tsx      메인 목록
-│   ├── fonts/[slug]/ 폰트 상세
-│   ├── ai/           AI 추천
-│   ├── pairing/      한글+영문 페어링
-│   ├── favorites/    즐겨찾기
-│   └── admin/        폰트 관리 (추가/삭제/추천 설정)
-└── .env.example
+│   ├── layout.jsx      ← 루트 레이아웃 + 메타데이터
+│   ├── page.jsx        ← 메인 페이지 조립
+│   └── globals.css     ← 파스텔 스카이 기본 스타일
+├── components/
+│   ├── Navbar.jsx      ← 스티키 네비게이션
+│   ├── Hero.jsx        ← 히어로 섹션
+│   ├── ProjectSection.jsx ← 프로젝트 카드 그리드 + 필터
+│   ├── NewsSection.jsx ← AI 뉴스 카드 섹션
+│   ├── AboutSection.jsx← 소개 + 기술 스택
+│   └── Footer.jsx      ← 푸터
+├── data/
+│   └── projects.js     ← 전체 프로젝트 데이터 (17개)
+├── lib/
+│   └── supabase.js     ← Supabase 연동 준비 (주석 처리)
+└── tailwind.config.js  ← 파스텔 스카이 커스텀 컬러
 ```
 
----
+## 자주 수정하는 항목
 
-## 🌟 포트폴리오 포인트
+### 프로젝트 URL 연결
+`data/projects.js` 에서 각 프로젝트의 `url` 필드 교체
 
-- **Supabase 실시간 DB**: git push 없이 폰트 즉시 추가
-- **AI 추천 + 캐싱**: Claude API 비용 최소화
-- **한글+영문 페어링**: 눈누에 없는 차별화 기능
-- **운영비 0원**: Vercel + Supabase Free 조합
+```js
+{
+  name: '계산기 웹앱',
+  url: 'https://your-calculators-domain.com',  // ← 여기 교체
+  subDomain: 'calculators.caboo.net',
+}
+```
+
+### 서브도메인 연결 (Vercel)
+Vercel 프로젝트 설정 → Domains → `calculators.caboo.net` 추가
+도메인 레지스트라에서 CNAME → `cname.vercel-dns.com` 설정
+
+### AI 뉴스 데이터 연동
+1. `lib/supabase.js` 주석 해제
+2. `.env.local` 에 Supabase 키 입력
+3. `components/NewsSection.jsx` 상단 TODO 주석 참고
+
+## 색상 시스템 (파스텔 스카이)
+
+| 변수 | 색상 | 용도 |
+|------|------|------|
+| brand-50  | #F0F9FF | 페이지 배경 |
+| brand-100 | #E0F2FE | 섹션 배경 · 카드 |
+| brand-200 | #BAE6FD | 테두리 |
+| brand-400 | #38BDF8 | CTA 버튼 |
+| brand-600 | #0284C7 | 네비 · 로고 |
