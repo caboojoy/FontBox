@@ -1,43 +1,26 @@
 import { MetadataRoute } from 'next'
-import { createServerClient } from '@/lib/supabase'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.vercel.app'
+export const dynamic = 'force-dynamic'
+
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.vercel.app'
+).replace(/\/$/, '')
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // 정적 페이지
   const staticPages: MetadataRoute.Sitemap = [
-    {
-      url: SITE_URL,
-      lastModified: new Date(),
-      changeFrequency: 'daily',
-      priority: 1.0,
-    },
-    {
-      url: `${SITE_URL}/ai`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/pairing`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.8,
-    },
-    {
-      url: `${SITE_URL}/favorites`,
-      lastModified: new Date(),
-      changeFrequency: 'weekly',
-      priority: 0.5,
-    },
+    { url: SITE_URL,              lastModified: new Date(), changeFrequency: 'daily',   priority: 1.0 },
+    { url: `${SITE_URL}/ai`,      lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.8 },
+    { url: `${SITE_URL}/pairing`, lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.8 },
   ]
 
-  // 폰트 상세 페이지 (DB에서 동적으로 생성)
+  // DB에서 폰트 페이지 동적 추가
   try {
+    const { createServerClient } = await import('@/lib/supabase')
     const db = createServerClient()
     const { data: fonts } = await db
       .from('fonts')
       .select('slug, updated_at')
+      .limit(500)
 
     const fontPages: MetadataRoute.Sitemap = (fonts || []).map(font => ({
       url: `${SITE_URL}/fonts/${font.slug}`,
@@ -48,6 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return [...staticPages, ...fontPages]
   } catch {
+    // DB 접근 실패 시 정적 페이지만 반환
     return staticPages
   }
 }

@@ -42,7 +42,7 @@ export default function Navbar() {
           className="flex items-center hover:opacity-80 transition-opacity"
         >
           <img
-            src="/caboo_white_00.png"
+            src="/caboo_blue_02.png"
             alt="caboo"
             className="h-8 w-auto"
           />

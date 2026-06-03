@@ -3,7 +3,7 @@ import Providers from '@/components/Providers'
 import Navbar from '@/components/Navbar'
 import './globals.css'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://myfontbox.vercel.app'
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.vercel.app'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -43,13 +43,11 @@ export const metadata: Metadata = {
   },
   verification: {
     google: 'a5NOfXxOOAjwioA0dxpf1uvUE1i9vZUhZhpw8F3FEwk',
-    
     other: {
-      'naver-site-verification': ['1bfb703ffa5f7af75314ee74e70a5b9f6cc2da6e'],
+      'naver-site-verification': ['078325f97233e003ee8e848d86da01b1e5309dd7'],
     },
   },
 }
-
 
 export default function RootLayout({
   children,

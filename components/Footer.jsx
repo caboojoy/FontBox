@@ -15,7 +15,7 @@ export default function Footer() {
           {/* 로고 이미지 */}
           <div>
             <img
-              src="/caboo_white_00.png"
+              src="/caboo_blue_02.png"
               alt="caboo"
               className="h-8 w-auto"
             />
