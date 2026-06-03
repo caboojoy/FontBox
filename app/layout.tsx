@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Providers from '@/components/Providers'
 import Navbar from '@/components/Navbar'
 import './globals.css'
+import Image from 'next/image'
+
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.vercel.app'
 
@@ -75,11 +77,16 @@ export default function RootLayout({
                 margin: '0 auto',
                 textAlign: 'center',
               }}>
-                <p style={{ fontSize: 13, color: '#94a3b8' }}>
-                  © 2025 FontBox. 모든 폰트의 저작권은 각 폰트 저작권자에게 있습니다.
-                </p>
-                <p style={{ fontSize: 12, color: '#94a3b8', opacity: 0.6, marginTop: 6 }}>
-                  Made with 🔤 FontBox
+                <p style={{ fontSize: 12, color: '#94a3b8', opacity: 0.6, marginTop: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  Made with{' '}
+                  <Image
+                    src="/caboo_blue_02.png"
+                    alt="FontBox"
+                    width={20}
+                    height={20}
+                    style={{ borderRadius: 4 }}
+                  />
+                  {' '}FontBox
                 </p>
               </div>
             </footer>

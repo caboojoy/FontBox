@@ -5,7 +5,7 @@ import FontCard from '@/components/FontCard'
 import FilterBar from '@/components/FilterBar'
 import PreviewControl from '@/components/PreviewControl'
 import { Font, FontFilters } from '@/types'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 const DEFAULT_FILTERS: FontFilters = {
   language: 'all',
@@ -14,6 +14,12 @@ const DEFAULT_FILTERS: FontFilters = {
   sort: 'popular',
   search: '',
 }
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  { db: { schema: 'fonts' } }
+)
 
 function escapeLike(s: string): string {
   return s.replace(/[%_\\]/g, '\\$&')
@@ -89,8 +95,8 @@ export default function HomePage() {
         }
       } catch (e) {
         if (!isMounted.current) return
-        const msg = e instanceof Error ? e.message : '알 수 없는 오류'
-        setError(`오류: ${msg}`)
+        const msg = e instanceof Error ? `${e.message} ${e.stack}` : JSON.stringify(e)
+        setError(`오류: ${msg}`)  
         setFonts([])
       } finally {
         if (isMounted.current) setLoading(false)
@@ -191,7 +197,7 @@ export default function HomePage() {
           ⚠️ {error}
           <br />
           <span style={{ fontSize: 12, color: '#ef4444', marginTop: 4, display: 'block' }}>
-            Supabase에서 ALTER TABLE 명령어를 실행했는지 확인하세요.
+            {error}
           </span>
         </div>
       )}
