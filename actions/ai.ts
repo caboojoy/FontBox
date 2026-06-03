@@ -1,5 +1,6 @@
 'use server'
 
+import Anthropic from '@anthropic-ai/sdk'
 import { createServerClient } from '@/lib/supabase'
 import { Font } from '@/types'
 import crypto from 'crypto'
@@ -15,18 +16,15 @@ export async function getAIRecommendation(prompt: string): Promise<
   if (!prompt.trim() || prompt.length < 5)
     return { error: '요청을 좀 더 자세히 입력해주세요.' }
 
-  // API 키 체크 — 모듈 최상단이 아닌 함수 내부에서 확인
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return { error: 'AI 추천 서비스가 설정되지 않았습니다.' }
 
-  // Anthropic 인스턴스를 함수 내부에서 생성 (빌드 타임 crash 방지)
-  const { default: Anthropic } = await import('@anthropic-ai/sdk')
+  // 정적 import — 빌드 시 번들에 포함
   const anthropic = new Anthropic({ apiKey })
 
   const db = createServerClient()
   const cacheKey = hashPrompt(prompt)
 
-  // 캐시 확인 — 동일 프롬프트는 API 비용 0원
   const { data: cached } = await db
     .from('ai_cache').select('*').eq('cache_key', cacheKey).maybeSingle()
 
@@ -46,7 +44,6 @@ export async function getAIRecommendation(prompt: string): Promise<
     }
   }
 
-  // 폰트 요약 목록 (token 절약)
   const { data: allFonts } = await db
     .from('fonts').select('slug, name, category, language, tags')
 
@@ -64,17 +61,16 @@ Recommend 2-4 fonts from: ${JSON.stringify(allFonts)}`,
     })
 
     const text = res.content
-      .filter(b => b.type === 'text')
-      .map(b => (b as { type: 'text'; text: string }).text)
+      .filter((b: any) => b.type === 'text')
+      .map((b: any) => b.text)
       .join('')
 
     const parsed = JSON.parse(text.replace(/```[\s\S]*?```/g, '').trim())
     const validSlugs = (parsed.font_slugs as string[])
-      .filter(s => allFonts.some(f => f.slug === s))
+      .filter((s: string) => allFonts.some(f => f.slug === s))
 
-    if (validSlugs.length === 0) {
+    if (validSlugs.length === 0)
       return { error: '적합한 폰트를 찾지 못했습니다. 다시 시도해주세요.' }
-    }
 
     await db.from('ai_cache').insert({
       cache_key: cacheKey, prompt,
@@ -93,7 +89,7 @@ Recommend 2-4 fonts from: ${JSON.stringify(allFonts)}`,
       cached: false,
     }
   } catch (err) {
-    console.error('AI recommendation error:', err)
+    console.error('AI error:', err)
     return { error: 'AI 추천 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.' }
   }
 }
