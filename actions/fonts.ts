@@ -1,6 +1,6 @@
 'use server'
 
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase-server'
 import { Font } from '@/types'
 
 // 검색어의 ilike 특수문자 이스케이프 (%, _ 는 SQL 와일드카드)

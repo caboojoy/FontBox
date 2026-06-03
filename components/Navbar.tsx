@@ -56,7 +56,7 @@ export default function Navbar() {
 
           {/* 데스크탑 네비 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 2 }}
-               className="hidden md:flex">
+              className="hidden md:flex">
             {links.map(({ href, label, icon: Icon }) => {
               const active = pathname === href
               return (

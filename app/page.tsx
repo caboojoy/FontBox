@@ -5,7 +5,7 @@ import FontCard from '@/components/FontCard'
 import FilterBar from '@/components/FilterBar'
 import PreviewControl from '@/components/PreviewControl'
 import { Font, FontFilters } from '@/types'
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase-client'
 
 const DEFAULT_FILTERS: FontFilters = {
   language: 'all',
@@ -15,15 +15,6 @@ const DEFAULT_FILTERS: FontFilters = {
   search: '',
 }
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  { db: { schema: 'fonts' } }
-)
-
-function escapeLike(s: string): string {
-  return s.replace(/[%_\\]/g, '\\$&')
-}
 
 export default function HomePage() {
   const [fonts, setFonts]     = useState<Font[]>([])
