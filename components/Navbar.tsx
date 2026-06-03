@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { Heart, Sparkles, Menu, X, Type } from 'lucide-react'
+import Image from 'next/image'
+
 
 export default function Navbar() {
   const pathname  = usePathname()
@@ -40,14 +42,13 @@ export default function Navbar() {
 
           {/* 로고 */}
           <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-            <div style={{
-              width: 32, height: 32, borderRadius: 8,
-              background: 'linear-gradient(135deg, #1E90FF, #7c3aed)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 2px 8px rgba(30,144,255,0.3)',
-            }}>
-              <Type size={15} color="white" />
-            </div>
+            <Image
+              src="/caboo_blue_02.png"
+              alt="FontBox 로고"
+              width={32}
+              height={32}
+              style={{ borderRadius: 8 }}
+            />
             <span style={{ fontWeight: 700, fontSize: 17, color: '#0f172a', letterSpacing: '-0.01em' }}>
               FontBox
             </span>
