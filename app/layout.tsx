@@ -46,10 +46,11 @@ export const metadata: Metadata = {
   verification: {
     google: 'a5NOfXxOOAjwioA0dxpf1uvUE1i9vZUhZhpw8F3FEwk',
     other: {
-      'naver-site-verification': ['078325f97233e003ee8e848d86da01b1e5309dd7'],
+      'naver-site-verification': ['baca438580f1db8f3e992fca7f2148d905224e8d'],
     },
   },
 }
+
 
 export default function RootLayout({
   children,
