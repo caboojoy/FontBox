@@ -7,6 +7,11 @@ import PreviewControl from '@/components/PreviewControl'
 import { Font, FontFilters } from '@/types'
 import { supabase } from '@/lib/supabase-client'
 
+// 검색어의 ilike 특수문자 이스케이프
+function escapeLike(s: string): string {
+  return s.replace(/[%_\\]/g, '\\$&')
+}
+
 const DEFAULT_FILTERS: FontFilters = {
   language: 'all',
   category: 'all',
@@ -14,6 +19,7 @@ const DEFAULT_FILTERS: FontFilters = {
   sort: 'popular',
   search: '',
 }
+
 
 
 export default function HomePage() {
