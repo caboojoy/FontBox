@@ -38,6 +38,9 @@ export interface Font {
   is_featured: boolean
   created_at: string
   updated_at?: string
+  webfont_css?: string | null  // 추가: 지자체·눈누 @font-face CSS
+  source?: string              // 추가: 'google' | 'juso' | 'noonnu'
+  
 }
 
 export interface Favorite {
