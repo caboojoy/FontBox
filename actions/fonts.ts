@@ -121,3 +121,12 @@ export async function getFontStats(): Promise<{
     featured: data.filter(f => f.is_featured).length,
   }
 }
+
+export async function getAllFontSlugs(): Promise<string[]> {
+  const { data, error } = await fontsDb
+    .from('fonts')
+    .select('slug')
+
+  if (error || !data) return []
+  return data.map((row) => row.slug)
+}
