@@ -11,6 +11,44 @@ function escapeLike(s: string): string {
   return s.replace(/[%_\\]/g, '\\$&')
 }
 
+// 한글 검색어 → 영문 카테고리 매핑
+const KOREAN_CATEGORY_MAP: Record<string, string> = {
+  '고딕': 'gothic', '고딕체': 'gothic',
+  '산세리프': 'sans-serif', '산스세리프': 'sans-serif',
+  '세리프': 'serif',
+  '손글씨': 'handwriting', '손글씨체': 'handwriting', '핸드라이팅': 'handwriting',
+  '필기': 'handwriting', '필기체': 'handwriting',
+  '디스플레이': 'display', '장식': 'display', '디자인': 'display',
+  '모노': 'monospace', '모노스페이스': 'monospace', '코딩': 'monospace',
+  '명조': 'serif', '명조체': 'serif',
+  '둥근': 'rounded', '둥근고딕': 'rounded',
+}
+
+// 한글 태그 → 영문 태그 매핑
+const KOREAN_TAG_MAP: Record<string, string[]> = {
+  '굵은': ['bold', 'heavy'],
+  '얇은': ['thin', 'light'],
+  '가는': ['thin', 'light'],
+  '깔끔한': ['clean', 'minimal'],
+  '깔끔': ['clean', 'minimal'],
+  '현대적': ['modern', 'contemporary'],
+  '클래식': ['classic', 'traditional'],
+  '전통': ['classic', 'traditional'],
+  '브랜드': ['brand', 'branding'],
+  '로고': ['logo', 'brand'],
+  '제목': ['display', 'heading', 'title'],
+  '본문': ['body', 'readable', 'text'],
+  '가독성': ['readable', 'legible', 'body'],
+  '귀여운': ['cute', 'casual', 'friendly'],
+  '귀여움': ['cute', 'casual'],
+  '캐주얼': ['casual', 'friendly'],
+  '블로그': ['blog', 'web'],
+  '앱': ['app', 'ui'],
+  '웹': ['web', 'ui'],
+  '포스터': ['poster', 'display'],
+  '광고': ['advertising', 'display'],
+}
+
 const DEFAULT_FILTERS: FontFilters = {
   language: 'all',
   category: 'all',
@@ -22,19 +60,19 @@ const DEFAULT_FILTERS: FontFilters = {
 const PAGE_SIZE = 24
 
 export default function HomePage() {
-  const [fonts, setFonts]         = useState<Font[]>([])
-  const [loading, setLoading]     = useState(true)
+  const [fonts, setFonts]             = useState<Font[]>([])
+  const [loading, setLoading]         = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
-  const [error, setError]         = useState<string | null>(null)
-  const [filters, setFilters]     = useState<FontFilters>(DEFAULT_FILTERS)
+  const [error, setError]             = useState<string | null>(null)
+  const [filters, setFilters]         = useState<FontFilters>(DEFAULT_FILTERS)
   const [previewText, setPreviewText] = useState('')
   const [previewSize, setPreviewSize] = useState(28)
-  const [favorites, setFavorites] = useState<Set<string>>(new Set())
-  const [page, setPage]           = useState(0)
-  const [hasMore, setHasMore]     = useState(true)
-  const [totalCount, setTotalCount] = useState(0)
+  const [favorites, setFavorites]     = useState<Set<string>>(new Set())
+  const [page, setPage]               = useState(0)
+  const [hasMore, setHasMore]         = useState(true)
+  const [totalCount, setTotalCount]   = useState(0)
   const prevSearchRef = useRef('')
-  const isMounted = useRef(true)
+  const isMounted    = useRef(true)
 
   useEffect(() => {
     isMounted.current = true
@@ -44,6 +82,17 @@ export default function HomePage() {
   useEffect(() => {
     const saved = localStorage.getItem('fontbox_favorites')
     if (saved) setFavorites(new Set(JSON.parse(saved)))
+  }, [])
+
+  // 전체 폰트 수량 (필터 무관) — 마운트 시 1회만
+  useEffect(() => {
+    supabase
+      .schema('fonts')
+      .from('fonts')
+      .select('*', { count: 'exact', head: true })
+      .then(({ count }) => {
+        if (count !== null) setTotalCount(count)
+      })
   }, [])
 
   // 쿼리 빌더 공통 함수
@@ -62,8 +111,37 @@ export default function HomePage() {
     if (currentFilters.license  !== 'all') query = query.eq('license',  currentFilters.license)
 
     if (currentFilters.search.trim()) {
-      const q = escapeLike(currentFilters.search.trim())
-      query = query.or(`name.ilike.%${q}%,designer.ilike.%${q}%`)
+      const raw = currentFilters.search.trim()
+      const q   = escapeLike(raw)
+
+      // 한글 → 영문 카테고리 매핑
+      const mappedCategory = KOREAN_CATEGORY_MAP[raw]
+      // 한글 → 영문 태그 매핑
+      const mappedTags = KOREAN_TAG_MAP[raw] ?? []
+
+      // or 조건 조합
+      const orParts: string[] = [
+        `name.ilike.%${q}%`,
+        `designer.ilike.%${q}%`,
+        `category.ilike.%${q}%`,
+      ]
+
+      // 카테고리 매핑 히트 시 추가
+      if (mappedCategory) {
+        orParts.push(`category.eq.${mappedCategory}`)
+      }
+
+      // 태그 매핑 히트 시 추가 (tags는 text[] 배열 — cs: contains)
+      mappedTags.forEach(tag => {
+        orParts.push(`tags.cs.{${tag}}`)
+      })
+
+      // 영문 검색어면 tags 배열에서도 직접 검색
+      if (/^[a-zA-Z\s]+$/.test(raw)) {
+        orParts.push(`tags.cs.{${raw.toLowerCase()}}`)
+      }
+
+      query = query.or(orParts.join(','))
     }
 
     switch (currentFilters.sort) {
@@ -77,17 +155,6 @@ export default function HomePage() {
     }
 
     return query
-  }, [])
-
-  // 전체 폰트 수량 (필터 무관) — 마운트 시 1회만
-  useEffect(() => {
-    supabase
-      .schema('fonts')
-      .from('fonts')
-      .select('*', { count: 'exact', head: true })
-      .then(({ count }) => {
-        if (count !== null) setTotalCount(count)
-      })
   }, [])
 
   // 필터 변경 시 첫 페이지 로드
@@ -120,7 +187,6 @@ export default function HomePage() {
         } else {
           const result = (data as Font[]) || []
           setFonts(result)
-          // 검색 중이면 더보기 불필요
           setHasMore(!isSearching && result.length === PAGE_SIZE)
         }
       } catch (e) {
@@ -304,7 +370,7 @@ export default function HomePage() {
                   transition: 'background 0.2s',
                 }}
               >
-                {loadingMore ? '불러오는 중...' : `더 보기`}
+                {loadingMore ? '불러오는 중...' : '더 보기'}
               </button>
             </div>
           )}
