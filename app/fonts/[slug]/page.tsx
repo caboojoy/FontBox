@@ -1,31 +1,41 @@
-import { Metadata } from 'next'
-import { notFound } from 'next/navigation'
-import { getFontBySlug, getSimilarFonts } from '@/actions/fonts'
-import FontDetailClient from './FontDetailClient'
+  import { Metadata } from 'next'
+  import { notFound } from 'next/navigation'
+  import { cache } from 'react'
+  import { getFontBySlug, getSimilarFonts, getAllFontSlugs } from '@/actions/fonts'
+  import FontDetailClient from './FontDetailClient'
 
-// Supabase를 런타임에 호출 → 빌드 시 정적 생성 시도 안 함
-export const dynamic = 'force-dynamic'
+  // force-dynamic 제거 → 정적 생성으로 전환
+  // export const dynamic = 'force-dynamic'  ← 이 줄 삭제
 
-interface Props {
-  params: { slug: string }
-}
+  // React cache로 같은 요청 내 중복 쿼리 방지
+  const getCachedFont = cache(getFontBySlug)
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const font = await getFontBySlug(params.slug)
-  if (!font) return {}
-  return {
-    title: `${font.name} — 무료 웹폰트`,
-    description: `${font.name}을(를) 무료로 사용하세요. ${font.category} 계열, ${font.license} 라이선스. 웹폰트 CSS 코드를 바로 복사하세요.`,
+  // 빌드 시 모든 폰트 slug를 정적 페이지로 생성
+  export async function generateStaticParams() {
+    const slugs = await getAllFontSlugs()
+    return slugs.map((slug) => ({ slug }))
   }
-}
 
-export default async function FontDetailPage({ params }: Props) {
-  const font = await getFontBySlug(params.slug)
+  interface Props {
+    params: { slug: string }
+  }
 
-  // notFound()는 never를 반환하므로 아래부터 font는 non-null
-  if (!font) return notFound()
+  export async function generateMetadata({ params }: Props): Promise<Metadata> {
+    const font = await getCachedFont(params.slug)  // cache 적용
+    if (!font) return {}
+    return {
+      title: `${font.name} — 무료 웹폰트`,
+      description: `${font.name}을(를) 무료로 사용하세요. ${font.category} 계열, ${font.license} 라이선스. 웹폰트 CSS 코드를 바로 복사하세요.`,
+    }
+  }
 
-  const similarFonts = await getSimilarFonts(font, 4)
+  export default async function FontDetailPage({ params }: Props) {
+    const font = await getCachedFont(params.slug)  // 위와 같은 요청이면 캐시 hit
 
-  return <FontDetailClient font={font} similarFonts={similarFonts} />
-}
+    if (!font) return notFound()
+
+    const similarFonts = await getSimilarFonts(font, 4)
+
+    return <FontDetailClient font={font} similarFonts={similarFonts} />
+  }
+  

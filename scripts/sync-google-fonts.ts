@@ -46,7 +46,7 @@ const DRY_RUN      = args.includes('--dry-run')
 
 // ─── 영문 폰트 제한 (너무 많으면 부하) ─────────────────
 // 인기순으로 상위 N개만 추가. 0이면 전체
-const ENGLISH_LIMIT = 300
+const ENGLISH_LIMIT = 600
 
 // ─── 타입 ───────────────────────────────────────────────
 interface GoogleFont {
