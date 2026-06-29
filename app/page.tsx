@@ -79,6 +79,17 @@ export default function HomePage() {
     return query
   }, [])
 
+  // 전체 폰트 수량 (필터 무관) — 마운트 시 1회만
+  useEffect(() => {
+    supabase
+      .schema('fonts')
+      .from('fonts')
+      .select('*', { count: 'exact', head: true })
+      .then(({ count }) => {
+        if (count !== null) setTotalCount(count)
+      })
+  }, [])
+
   // 필터 변경 시 첫 페이지 로드
   useEffect(() => {
     const searchChanged = filters.search !== prevSearchRef.current
@@ -91,7 +102,13 @@ export default function HomePage() {
       setPage(0)
 
       try {
-        const query = buildQuery(filters).range(0, PAGE_SIZE - 1)
+        const isSearching = filters.search.trim().length > 0
+
+        // 검색 중일 땐 전체 결과, 아닐 땐 첫 PAGE_SIZE개만
+        const query = isSearching
+          ? buildQuery(filters)
+          : buildQuery(filters).range(0, PAGE_SIZE - 1)
+
         const { data, error: qErr } = await query
 
         if (!isMounted.current) return
@@ -103,8 +120,8 @@ export default function HomePage() {
         } else {
           const result = (data as Font[]) || []
           setFonts(result)
-          setHasMore(result.length === PAGE_SIZE)
-          setTotalCount(result.length) // 첫 페이지 기준 (더보기로 누적)
+          // 검색 중이면 더보기 불필요
+          setHasMore(!isSearching && result.length === PAGE_SIZE)
         }
       } catch (e) {
         if (!isMounted.current) return
@@ -140,7 +157,6 @@ export default function HomePage() {
         setFonts(prev => [...prev, ...result])
         setPage(nextPage)
         setHasMore(result.length === PAGE_SIZE)
-        setTotalCount(prev => prev + result.length)
       }
     } catch (e) {
       console.error('더보기 오류:', e)
@@ -198,7 +214,7 @@ export default function HomePage() {
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: 32, marginTop: 32 }}>
           {[
-            { num: '700+', label: '무료 폰트' },
+            { num: totalCount ? `${totalCount}+` : '700+', label: '무료 폰트' },
             { num: 'AI',   label: '폰트 추천' },
             { num: '즉시', label: 'CSS 복사' },
           ].map(({ num, label }) => (
@@ -304,3 +320,4 @@ export default function HomePage() {
     </div>
   )
 }
+
