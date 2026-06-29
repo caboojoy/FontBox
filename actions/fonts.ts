@@ -123,11 +123,12 @@ export async function getFontStats(): Promise<{
 }
 
 export async function getAllFontSlugs(): Promise<string[]> {
-  const { data, error } = await fontsDb
+  const supabase = createServerClient()
+  const { data, error } = await supabase
+    .schema('fonts')
     .from('fonts')
     .select('slug')
 
   if (error || !data) return []
-  return data.map((row) => row.slug)
+  return data.map((row: { slug: string }) => row.slug)
 }
-
