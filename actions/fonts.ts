@@ -132,3 +132,4 @@ export async function getAllFontSlugs(): Promise<string[]> {
   if (error || !data) return []
   return data.map((row: { slug: string }) => row.slug)
 }
+
