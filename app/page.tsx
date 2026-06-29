@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import FontCard from '@/components/FontCard'
 import FilterBar from '@/components/FilterBar'
 import PreviewControl from '@/components/PreviewControl'
 import { Font, FontFilters } from '@/types'
 import { supabase } from '@/lib/supabase-client'
 
-// 검색어의 ilike 특수문자 이스케이프
 function escapeLike(s: string): string {
   return s.replace(/[%_\\]/g, '\\$&')
 }
@@ -20,16 +19,20 @@ const DEFAULT_FILTERS: FontFilters = {
   search: '',
 }
 
-
+const PAGE_SIZE = 24
 
 export default function HomePage() {
-  const [fonts, setFonts]     = useState<Font[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
-  const [filters, setFilters] = useState<FontFilters>(DEFAULT_FILTERS)
+  const [fonts, setFonts]         = useState<Font[]>([])
+  const [loading, setLoading]     = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [error, setError]         = useState<string | null>(null)
+  const [filters, setFilters]     = useState<FontFilters>(DEFAULT_FILTERS)
   const [previewText, setPreviewText] = useState('')
   const [previewSize, setPreviewSize] = useState(28)
   const [favorites, setFavorites] = useState<Set<string>>(new Set())
+  const [page, setPage]           = useState(0)
+  const [hasMore, setHasMore]     = useState(true)
+  const [totalCount, setTotalCount] = useState(0)
   const prevSearchRef = useRef('')
   const isMounted = useRef(true)
 
@@ -43,7 +46,40 @@ export default function HomePage() {
     if (saved) setFavorites(new Set(JSON.parse(saved)))
   }, [])
 
-  // 폰트 조회 — useCallback 제거, 직접 useEffect에서 실행
+  // 쿼리 빌더 공통 함수
+  const buildQuery = useCallback((currentFilters: FontFilters) => {
+    let query = supabase
+      .schema('fonts')
+      .from('fonts')
+      .select('*')
+
+    if (currentFilters.language !== 'all') {
+      if (currentFilters.language === 'korean')  query = query.eq('supports_korean', true)
+      if (currentFilters.language === 'english') query = query.eq('supports_latin', true).neq('language', 'korean')
+      if (currentFilters.language === 'both')    query = query.eq('language', 'both')
+    }
+    if (currentFilters.category !== 'all') query = query.eq('category', currentFilters.category)
+    if (currentFilters.license  !== 'all') query = query.eq('license',  currentFilters.license)
+
+    if (currentFilters.search.trim()) {
+      const q = escapeLike(currentFilters.search.trim())
+      query = query.or(`name.ilike.%${q}%,designer.ilike.%${q}%`)
+    }
+
+    switch (currentFilters.sort) {
+      case 'popular': query = query.order('download_count', { ascending: false }); break
+      case 'newest':  query = query.order('created_at',     { ascending: false }); break
+      case 'name':    query = query.order('name',           { ascending: true  }); break
+      default:
+        query = query
+          .order('is_featured',    { ascending: false })
+          .order('download_count', { ascending: false })
+    }
+
+    return query
+  }, [])
+
+  // 필터 변경 시 첫 페이지 로드
   useEffect(() => {
     const searchChanged = filters.search !== prevSearchRef.current
     prevSearchRef.current = filters.search
@@ -52,56 +88,66 @@ export default function HomePage() {
     const timer = setTimeout(async () => {
       setLoading(true)
       setError(null)
+      setPage(0)
 
       try {
-        let query = supabase.from('fonts').select('*')
-
-        if (filters.language !== 'all') {
-          if (filters.language === 'korean')  query = query.eq('supports_korean', true)
-          if (filters.language === 'english') query = query.eq('supports_latin', true).neq('language', 'korean')
-          if (filters.language === 'both')    query = query.eq('language', 'both')
-        }
-        if (filters.category !== 'all') query = query.eq('category', filters.category)
-        if (filters.license  !== 'all') query = query.eq('license',  filters.license)
-
-        if (filters.search.trim()) {
-          const q = escapeLike(filters.search.trim())
-          query = query.or(`name.ilike.%${q}%,designer.ilike.%${q}%`)
-        }
-
-        switch (filters.sort) {
-          case 'popular': query = query.order('download_count', { ascending: false }); break
-          case 'newest':  query = query.order('created_at',     { ascending: false }); break
-          case 'name':    query = query.order('name',           { ascending: true  }); break
-          default:
-            query = query
-              .order('is_featured',    { ascending: false })
-              .order('download_count', { ascending: false })
-        }
-
+        const query = buildQuery(filters).range(0, PAGE_SIZE - 1)
         const { data, error: qErr } = await query
 
         if (!isMounted.current) return
 
         if (qErr) {
-          console.error('Supabase error:', qErr)
           setError(`DB 오류: ${qErr.message}`)
           setFonts([])
+          setHasMore(false)
         } else {
-          setFonts((data as Font[]) || [])
+          const result = (data as Font[]) || []
+          setFonts(result)
+          setHasMore(result.length === PAGE_SIZE)
+          setTotalCount(result.length) // 첫 페이지 기준 (더보기로 누적)
         }
       } catch (e) {
         if (!isMounted.current) return
-        const msg = e instanceof Error ? `${e.message} ${e.stack}` : JSON.stringify(e)
-        setError(`오류: ${msg}`)  
+        const msg = e instanceof Error ? e.message : JSON.stringify(e)
+        setError(`오류: ${msg}`)
         setFonts([])
+        setHasMore(false)
       } finally {
         if (isMounted.current) setLoading(false)
       }
     }, delay)
 
     return () => clearTimeout(timer)
-  }, [filters])
+  }, [filters, buildQuery])
+
+  // 더보기
+  const handleLoadMore = async () => {
+    if (loadingMore || !hasMore) return
+    setLoadingMore(true)
+
+    try {
+      const nextPage = page + 1
+      const from = nextPage * PAGE_SIZE
+      const to   = from + PAGE_SIZE - 1
+
+      const query = buildQuery(filters).range(from, to)
+      const { data, error: qErr } = await query
+
+      if (!isMounted.current) return
+
+      if (!qErr && data) {
+        const result = data as Font[]
+        setFonts(prev => [...prev, ...result])
+        setPage(nextPage)
+        setHasMore(result.length === PAGE_SIZE)
+        setTotalCount(prev => prev + result.length)
+      }
+    } catch (e) {
+      console.error('더보기 오류:', e)
+    } finally {
+      if (isMounted.current) setLoadingMore(false)
+    }
+  }
 
   const handleFilterChange = (partial: Partial<FontFilters>) => {
     setFilters(prev => ({ ...prev, ...partial }))
@@ -152,8 +198,8 @@ export default function HomePage() {
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: 32, marginTop: 32 }}>
           {[
-            { num: '55+', label: '무료 폰트' },
-            { num: 'AI',  label: '폰트 추천' },
+            { num: '700+', label: '무료 폰트' },
+            { num: 'AI',   label: '폰트 추천' },
             { num: '즉시', label: 'CSS 복사' },
           ].map(({ num, label }) => (
             <div key={label} style={{ textAlign: 'center' }}>
@@ -182,20 +228,16 @@ export default function HomePage() {
 
       {/* 필터 */}
       <div style={{ marginBottom: 32 }}>
-        <FilterBar filters={filters} onChange={handleFilterChange} totalCount={fonts.length} />
+        <FilterBar filters={filters} onChange={handleFilterChange} totalCount={totalCount} />
       </div>
 
-      {/* DB 오류 표시 */}
+      {/* DB 오류 */}
       {error && (
         <div style={{
           padding: '14px 18px', borderRadius: 12, marginBottom: 24,
           background: '#fef2f2', border: '1px solid #fecaca', color: '#dc2626', fontSize: 14,
         }}>
           ⚠️ {error}
-          <br />
-          <span style={{ fontSize: 12, color: '#ef4444', marginTop: 4, display: 'block' }}>
-            {error}
-          </span>
         </div>
       )}
 
@@ -217,18 +259,47 @@ export default function HomePage() {
           <p style={{ fontSize: 14, color: '#94a3b8', marginTop: 8 }}>다른 키워드나 필터를 시도해보세요</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
-          {fonts.map((font) => (
-            <FontCard
-              key={font.id}
-              font={font}
-              previewText={previewText}
-              previewSize={previewSize}
-              isFavorited={favorites.has(font.slug)}
-              onToggleFavorite={handleToggleFavorite}
-            />
-          ))}
-        </div>
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 20 }}>
+            {fonts.map((font) => (
+              <FontCard
+                key={font.id}
+                font={font}
+                previewText={previewText}
+                previewSize={previewSize}
+                isFavorited={favorites.has(font.slug)}
+                onToggleFavorite={handleToggleFavorite}
+              />
+            ))}
+          </div>
+
+          {/* 더보기 버튼 */}
+          {hasMore && (
+            <div style={{ textAlign: 'center', marginTop: 48 }}>
+              <button
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                style={{
+                  padding: '13px 40px', borderRadius: 100,
+                  background: loadingMore ? '#94a3b8' : '#1E90FF',
+                  color: '#fff', border: 'none',
+                  fontSize: 15, fontWeight: 600,
+                  cursor: loadingMore ? 'not-allowed' : 'pointer',
+                  transition: 'background 0.2s',
+                }}
+              >
+                {loadingMore ? '불러오는 중...' : `더 보기`}
+              </button>
+            </div>
+          )}
+
+          {/* 전체 로드 완료 */}
+          {!hasMore && fonts.length > PAGE_SIZE && (
+            <div style={{ textAlign: 'center', marginTop: 48, color: '#94a3b8', fontSize: 14 }}>
+              총 {fonts.length}개 폰트를 모두 불러왔어요 ✓
+            </div>
+          )}
+        </>
       )}
     </div>
   )
