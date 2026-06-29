@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { Plus, Trash2, Eye, Check, RefreshCw, X } from 'lucide-react'
-import { fontsDb as supabase } from '@/lib/supabase'
+import { fontsDb as supabase } from '@/lib/supabase-client'
 import { Font } from '@/types'
 import { addFont, deleteFont, updateFont, getFontStats } from '@/actions/fonts'
 

@@ -1,7 +1,7 @@
 'use server'
 
 import Anthropic from '@anthropic-ai/sdk'
-import { createServerClient } from '@/lib/supabase'
+import { createServerClient } from '@/lib/supabase-server'
 import { Font } from '@/types'
 import crypto from 'crypto'
 
