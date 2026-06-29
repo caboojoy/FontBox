@@ -130,3 +130,14 @@ export async function getAllFontSlugs(): Promise<string[]> {
   if (error || !data) return []
   return data.map((row) => row.slug)
 }
+
+export async function getAllFontSlugs(): Promise<string[]> {
+  const supabase = createServerClient()
+  const { data, error } = await supabase
+    .schema('fonts')
+    .from('fonts')
+    .select('slug')
+
+  if (error || !data) return []
+  return data.map((row: { slug: string }) => row.slug)
+}
