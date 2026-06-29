@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Shuffle, Copy, Check } from 'lucide-react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase-client'
 import { Font } from '@/types'
 import { generateCSSCode } from '@/lib/fonts'
 

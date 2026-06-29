@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { fontsDb } from '@/lib/supabase'
+import { fontsDb } from '@/lib/supabase-client'
 
 export default function DebugPage() {
   const [results, setResults] = useState<Record<string, string>>({})
