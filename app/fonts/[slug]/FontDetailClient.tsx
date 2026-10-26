@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Copy, Check, Heart, Download } from 'lucide-react'
 import { Font } from '@/types'
-import { generateCSSCode, getDefaultPreviewText, getLicenseLabel, getLanguageLabel, getCategoryLabel, getDownloadUrl } from '@/lib/fonts'
+import { generateCSSCode, getDefaultPreviewText, getLicenseLabel, getLanguageLabel, getCategoryLabel, getDownloadUrl, loadFontStyles } from '@/lib/fonts'
 import FontCard from '@/components/FontCard'
 
 interface Props {
@@ -49,17 +49,12 @@ export default function FontDetailClient({ font, similarFonts }: Props) {
     }
   }, [font.slug])
 
-  useEffect(() => {
-    // 웹폰트 로드 — cleanup 시 안전하게 제거
-    const link = document.createElement('link')
-    link.rel = 'stylesheet'
-    link.href = font.cdn_url
-    link.onload = () => setFontLoaded(true)
-    document.head.appendChild(link)
-    return () => {
-      if (document.head.contains(link)) document.head.removeChild(link)
-    }
-  }, [font.cdn_url])
+  useEffect(
+    // 웹폰트 로드 (cdn_url 또는 webfont_css) — cleanup 시 안전하게 제거
+    () => loadFontStyles(font, () => setFontLoaded(true)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [font.cdn_url, font.webfont_css],
+  )
 
   // 미리보기 div 초기 텍스트 세팅 (ref 방식)
   useEffect(() => {

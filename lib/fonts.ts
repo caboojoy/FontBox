@@ -33,9 +33,35 @@ export function getDefaultPreviewText(font: Font, lang?: string): string {
   return '디자인 스튜디오 Design Studio 2025'
 }
 
+// 폰트 스타일을 <head>에 주입하고 제거 함수를 돌려준다.
+// cdn_url(외부 CSS)이 있으면 <link>, 없으면 webfont_css(@font-face)를 <style>로 넣는다.
+export function loadFontStyles(
+  font: Pick<Font, 'cdn_url' | 'webfont_css'>,
+  onLoad?: () => void,
+): () => void {
+  let el: HTMLLinkElement | HTMLStyleElement | null = null
+  if (font.cdn_url) {
+    const link = document.createElement('link')
+    link.rel = 'stylesheet'
+    link.href = font.cdn_url
+    if (onLoad) link.onload = onLoad
+    el = link
+  } else if (font.webfont_css) {
+    const style = document.createElement('style')
+    style.textContent = font.webfont_css
+    el = style
+  }
+  if (!el) return () => {}
+  document.head.appendChild(el)
+  if (el instanceof HTMLStyleElement) onLoad?.()
+  return () => { if (el && document.head.contains(el)) document.head.removeChild(el) }
+}
+
 export function generateCSSCode(font: Font): string {
   const license  = `/* 라이선스: ${font.license} | 상업적 이용: ${font.is_commercial ? '가능 ✓' : '불가 ✗'} */`
-  const importLine = `@import url('${font.cdn_url}');`
+  const importLine = font.cdn_url
+    ? `@import url('${font.cdn_url}');`
+    : (font.webfont_css ?? '')
   const cssClass = `.my-font {\n  font-family: '${font.css_family}', ${
     font.language === 'english' ? 'sans-serif' : "'Apple SD Gothic Neo', sans-serif"
   };\n}`

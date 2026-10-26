@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { Shuffle, Copy, Check } from 'lucide-react'
 import { supabase } from '@/lib/supabase-client'
 import { Font } from '@/types'
-import { generateCSSCode } from '@/lib/fonts'
+import { generateCSSCode, loadFontStyles } from '@/lib/fonts'
 
 const PAIRING_SUGGESTIONS = [
   { ko:'noto-sans-kr',     en:'inter',           label:'깔끔한 UI' },
@@ -47,22 +47,18 @@ export default function PairingPage() {
   const enFont = enFonts.find(f=>f.slug===enSlug)
 
   useEffect(() => {
-    if (!koFont?.cdn_url) return
+    if (!koFont) return
     setKoLoaded(false)
-    const link = document.createElement('link')
-    link.rel='stylesheet'; link.href=koFont.cdn_url
-    link.onload=()=>setKoLoaded(true)
-    document.head.appendChild(link)
-  },[koFont?.cdn_url])
+    return loadFontStyles(koFont, () => setKoLoaded(true))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[koFont?.cdn_url, koFont?.webfont_css])
 
   useEffect(() => {
-    if (!enFont?.cdn_url) return
+    if (!enFont) return
     setEnLoaded(false)
-    const link = document.createElement('link')
-    link.rel='stylesheet'; link.href=enFont.cdn_url
-    link.onload=()=>setEnLoaded(true)
-    document.head.appendChild(link)
-  },[enFont?.cdn_url])
+    return loadFontStyles(enFont, () => setEnLoaded(true))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[enFont?.cdn_url, enFont?.webfont_css])
 
   const randomize = () => {
     if(koFonts.length) setKoSlug(koFonts[Math.floor(Math.random()*koFonts.length)].slug)

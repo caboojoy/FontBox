@@ -11,6 +11,7 @@ import {
   getLanguageLabel,
   getCategoryLabel,
   getDownloadUrl,
+  loadFontStyles,
 } from '@/lib/fonts'
 
 interface FontCardProps {
@@ -34,26 +35,11 @@ export default function FontCard({
   const [hovered, setHovered]         = useState(false)
   const displayText = previewText || getDefaultPreviewText(font)
 
-  useEffect(() => {
-    if (font.cdn_url) {
-      const link = document.createElement('link')
-      link.rel = 'stylesheet'
-      link.href = font.cdn_url
-      link.onload = () => setFontLoaded(true)
-      document.head.appendChild(link)
-      return () => {
-        if (document.head.contains(link)) document.head.removeChild(link)
-      }
-    } else if (font.webfont_css) {
-      const style = document.createElement('style')
-      style.textContent = font.webfont_css
-      document.head.appendChild(style)
-      setFontLoaded(true)
-      return () => {
-        if (document.head.contains(style)) document.head.removeChild(style)
-      }
-    }
-  }, [font.cdn_url, font.webfont_css])
+  useEffect(
+    () => loadFontStyles(font, () => setFontLoaded(true)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [font.cdn_url, font.webfont_css],
+  )
 
 
 
