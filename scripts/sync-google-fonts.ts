@@ -243,7 +243,7 @@ async function main() {
   console.log(`${'─'.repeat(50)}`)
 
   // 8. 최종 DB 현황
-  const { count } = await db.from('fonts').select('*', { count: 'exact', head: true })
+  const { count } = await db.schema('fonts').from('fonts').select('*', { count: 'exact', head: true })
   console.log(`\n📊 최종 DB 폰트 수: ${count}개`)
 }
 
