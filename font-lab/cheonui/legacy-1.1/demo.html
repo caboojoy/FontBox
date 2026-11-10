@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>천의체 미리보기</title>
+<style>
+  @font-face { font-family: "Cheonui"; src: url("Cheonui-Regular.woff2") format("woff2"); }
+  @font-palette-values --obang     { font-family: "Cheonui"; base-palette: 0; }
+  @font-palette-values --dancheong { font-family: "Cheonui"; base-palette: 1; }
+  @font-palette-values --gold      { font-family: "Cheonui"; base-palette: 2; }
+  :root { --bg: #ecdebe; --ink: #1c1610; --muted: #5a4632; --line: #cdb88f; --accent: #b22222; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Malgun Gothic", sans-serif; }
+  header { padding: 20px 16px 8px; max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p.note { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; padding: 12px 16px;
+              max-width: 1100px; margin: 0 auto; border-bottom: 1px solid var(--line); }
+  .controls label { font-size: 14px; display: flex; gap: 6px; align-items: center; }
+  .controls button { font: inherit; font-size: 14px; padding: 6px 12px; border: 1px solid var(--line);
+                     background: #f6ecd4; border-radius: 6px; cursor: pointer; }
+  .controls button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  input[type=text] { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px;
+                     background: #fbf5e6; min-width: 220px; flex: 1; }
+  main { max-width: 1100px; margin: 0 auto; padding: 8px 16px 40px; }
+  .sample { font-family: "Cheonui", serif; font-palette: --obang; line-height: 1.55;
+            overflow-wrap: anywhere; margin: 28px 0 0; }
+  .s1 { font-size: clamp(56px, 11vw, 130px); }
+  .s2 { font-size: clamp(36px, 6vw, 72px); }
+  .s3 { font-size: clamp(24px, 3.4vw, 40px); }
+  .plain { font-feature-settings: "ss01" 1; }
+  footer { max-width: 1100px; margin: 0 auto; padding: 0 16px 24px; color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>천의체 (Cheonui) 1.1</h1>
+  <p class="note">오방색 컬러 폰트(COLR). 색을 지원하지 않는 프로그램에서는 단색 리본으로 보입니다. 글자색을 바꾸면 먹선과 글자가 그 색을 따릅니다.</p>
+</header>
+<div class="controls">
+  <button type="button" data-pal="--obang" aria-pressed="true">오방색</button>
+  <button type="button" data-pal="--dancheong" aria-pressed="false">단청</button>
+  <button type="button" data-pal="--gold" aria-pressed="false">금박</button>
+  <label><input type="checkbox" id="ss01"> 리본 없음 (ss01)</label>
+  <label>글자색 <input type="color" id="ink" value="#1c1610"></label>
+  <input type="text" id="txt" value="병오년 새해 복 많이 받으세요" aria-label="미리보기 문구">
+</div>
+<main>
+  <div class="sample s1">십이지신도</div>
+  <div class="sample s2" id="custom">병오년 새해 복 많이 받으세요</div>
+  <div class="sample s3">자축인묘 진사오미 신유술해 · 하늘의 수호신</div>
+  <div class="sample s3">제목은 <span class="plain">리본, 본문은 ss01로 리본 없이</span></div>
+</main>
+<footer>송명체(Song Myung, SIL OFL 1.1) 기반 · 한글 2,350자(KS X 1001)</footer>
+<script>
+  const samples = [...document.querySelectorAll('.sample')];
+  document.querySelectorAll('[data-pal]').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-pal]').forEach(x => x.setAttribute('aria-pressed', x === b));
+    samples.forEach(s => s.style.fontPalette = b.dataset.pal);
+  }));
+  document.getElementById('ss01').addEventListener('change', e => {
+    samples.forEach(s => s.style.fontFeatureSettings = e.target.checked ? '"ss01" 1' : '');
+  });
+  document.getElementById('ink').addEventListener('input', e => samples.forEach(s => s.style.color = e.target.value));
+  document.getElementById('txt').addEventListener('input', e => document.getElementById('custom').textContent = e.target.value || ' ');
+</script>
+</body>
+</html>

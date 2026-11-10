@@ -19,3 +19,9 @@ node_modules/
 
 .vercel
 .env*.local
+
+# 폰트 실험(font-lab): 생성된 폰트 바이너리는 커밋하지 않음 (소스로 재생성)
+font-lab/**/*.ttf
+font-lab/**/*.otf
+font-lab/**/*.woff
+font-lab/**/*.woff2
