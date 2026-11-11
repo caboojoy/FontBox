@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>바이브코딩 개발 폰트 미리보기</title>
+<style>
+  @font-face { font-family: "Cheonui"; font-weight: 400; src: url("Cheonui-2.1/Cheonui-Regular.woff2") format("woff2"); }
+  @font-face { font-family: "Cheonui"; font-weight: 700; src: url("Cheonui-2.1/Cheonui-Bold.woff2") format("woff2"); }
+  @font-face { font-family: "Cheonui Deco"; font-weight: 400; src: url("Cheonui-2.1/CheonuiDeco-Regular.woff2") format("woff2"); }
+  @font-face { font-family: "Cheonui Deco"; font-weight: 700; src: url("Cheonui-2.1/CheonuiDeco-Bold.woff2") format("woff2"); }
+  @font-face { font-family: "Suyeom Brush"; src: url("Suyeom-1.0/SuyeomBrush-Regular.woff2") format("woff2"); }
+  @font-face { font-family: "Suyeom Mustache"; src: url("Suyeom-1.0/SuyeomMustache-Regular.woff2") format("woff2"); }
+  @font-face { font-family: "Mungtuk Marker"; src: url("MungtukMarker-1.0/MungtukMarker-Regular.woff2") format("woff2"); }
+  @font-face { font-family: "Hwangya Western"; src: url("HwangyaWestern-1.0/HwangyaWestern-Regular.woff2") format("woff2"); }
+  @font-palette-values --obang     { font-family: "Cheonui", "Cheonui Deco"; base-palette: 0; }
+  @font-palette-values --dancheong { font-family: "Cheonui", "Cheonui Deco"; base-palette: 1; }
+  @font-palette-values --gold      { font-family: "Cheonui", "Cheonui Deco"; base-palette: 2; }
+
+  :root { --bg: #f4efe4; --card: #fbf8f1; --ink: #1c1610; --muted: #6a5a48; --line: #d9ccb4; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Malgun Gothic", "Apple SD Gothic Neo", sans-serif; }
+  header, main { max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+  header { padding-top: 24px; padding-bottom: 12px; }
+  h1 { font-size: 20px; margin: 0 0 12px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; position: sticky; top: 0; background: var(--bg); padding: 10px 0; border-bottom: 1px solid var(--line); z-index: 1; }
+  .controls input[type=text] { flex: 1; min-width: 220px; font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  .controls label { font-size: 14px; display: flex; gap: 8px; align-items: center; color: var(--muted); }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; margin: 18px 0; }
+  .head { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; margin-bottom: 4px; }
+  .head h2 { font-size: 16px; margin: 0; }
+  .head span { font-size: 13px; color: var(--muted); }
+  .head a { font-size: 13px; color: #8a4b1f; margin-left: auto; }
+  .sample { font-size: var(--size, 64px); line-height: 1.5; overflow-wrap: anywhere; margin: 6px 0 0; }
+  .small { font-size: 22px; line-height: 1.7; color: #3a2e22; margin: 4px 0 0; overflow-wrap: anywhere; }
+  .opts { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 10px; font-size: 13px; color: var(--muted); }
+  .opts button { font: inherit; padding: 4px 10px; border: 1px solid var(--line); background: #fff; border-radius: 6px; cursor: pointer; }
+  .opts button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .opts label { display: flex; gap: 5px; align-items: center; }
+</style>
+</head>
+<body>
+<header>
+  <h1>바이브코딩 개발 폰트 미리보기</h1>
+  <div class="controls">
+    <input type="text" id="txt" value="병오년 새해 복 많이 받으세요" aria-label="미리보기 문구">
+    <label>크기 <input type="range" id="size" min="24" max="140" value="64"> <span id="sizev">64px</span></label>
+  </div>
+</header>
+<main>
+  <section>
+    <div class="head"><h2>천의체</h2><span>Cheonui · Regular / Bold · 한글 11,172자 · 단어 첫 글자에 구름 장식</span><a href="Cheonui-2.1.zip" download>Cheonui-2.1.zip</a></div>
+    <p class="sample cheonui t" style="font-family:'Cheonui',serif;font-weight:700;font-palette:--obang"></p>
+    <p class="sample cheonui t" style="font-family:'Cheonui',serif;font-weight:400;font-palette:--obang"></p>
+    <div class="opts">
+      <button type="button" data-pal="--obang" aria-pressed="true">오방색</button>
+      <button type="button" data-pal="--dancheong" aria-pressed="false">단청</button>
+      <button type="button" data-pal="--gold" aria-pressed="false">금박</button>
+      <label><input type="checkbox" data-ss="ss01"> 모든 글자 (ss01)</label>
+      <label><input type="checkbox" data-ss="ss02"> 천의 리본 (ss02)</label>
+      <label><input type="checkbox" data-ss="ss03"> 장식 없음 (ss03)</label>
+      <a href="Cheonui-2.1/demo.html">천의체 전용 데모</a>
+    </div>
+  </section>
+  <section>
+    <div class="head"><h2>천의체 장식</h2><span>Cheonui Deco · 모든 글자에 구름이 붙어 있음 (워드·포토샵용)</span></div>
+    <p class="sample cheonui t" style="font-family:'Cheonui Deco',serif;font-weight:700;font-palette:--obang"></p>
+  </section>
+  <section>
+    <div class="head"><h2>수염체 붓털</h2><span>Suyeom Brush · 한글 2,350자</span><a href="Suyeom-1.0.zip" download>Suyeom-1.0.zip</a></div>
+    <p class="sample t" style="font-family:'Suyeom Brush',sans-serif"></p>
+    <p class="small" style="font-family:'Suyeom Brush',sans-serif">소요강호 선생님 아버지 할아버지 ㅇㅁㅂㅎ ABC abc 0123456789</p>
+  </section>
+  <section>
+    <div class="head"><h2>수염체 콧수염</h2><span>Suyeom Mustache · 한글 2,350자</span></div>
+    <p class="sample t" style="font-family:'Suyeom Mustache',sans-serif"></p>
+    <p class="small" style="font-family:'Suyeom Mustache',sans-serif">소요강호 선생님 아버지 할아버지 ㅇㅁㅂㅎ ABC abc 0123456789</p>
+  </section>
+  <section>
+    <div class="head"><h2>뭉툭마커</h2><span>Mungtuk Marker · 한글 11,172자</span><a href="MungtukMarker-1.0.zip" download>MungtukMarker-1.0.zip</a></div>
+    <p class="sample t" style="font-family:'Mungtuk Marker',sans-serif"></p>
+    <p class="small" style="font-family:'Mungtuk Marker',sans-serif">겸손할 수 있을 줄 알았다 그런데 너무 힘들다 · 뷁 쀍 똠방각하 · The quick brown fox 0123456789</p>
+  </section>
+  <section>
+    <div class="head"><h2>황야웨스턴</h2><span>Hwangya Western · 한글 11,172자</span><a href="HwangyaWestern-1.0.zip" download>HwangyaWestern-1.0.zip</a></div>
+    <p class="sample t" style="font-family:'Hwangya Western',serif"></p>
+    <p class="small" style="font-family:'Hwangya Western',serif">황야의 무법자 WANTED 석양이 지는 목장 · 뷁 쀍 똠방각하 · The quick brown fox 0123456789</p>
+  </section>
+</main>
+<script>
+  const txt = document.getElementById('txt'), size = document.getElementById('size');
+  const fill = () => document.querySelectorAll('.t').forEach(p => p.textContent = txt.value || ' ');
+  txt.addEventListener('input', fill); fill();
+  size.addEventListener('input', () => {
+    document.documentElement.style.setProperty('--size', size.value + 'px');
+    document.getElementById('sizev').textContent = size.value + 'px';
+  });
+  const ch = [...document.querySelectorAll('.cheonui')];
+  document.querySelectorAll('[data-pal]').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-pal]').forEach(x => x.setAttribute('aria-pressed', x === b));
+    ch.forEach(s => s.style.fontPalette = b.dataset.pal);
+  }));
+  const boxes = [...document.querySelectorAll('[data-ss]')];
+  boxes.forEach(c => c.addEventListener('change', () => {
+    const v = boxes.filter(x => x.checked).map(x => `"${x.dataset.ss}" 1`).join(', ');
+    ch.forEach(s => s.style.fontFeatureSettings = v || 'normal');
+  }));
+</script>
+</body>
+</html>

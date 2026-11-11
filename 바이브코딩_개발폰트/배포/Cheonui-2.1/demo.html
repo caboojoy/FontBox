@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>천의체 2.1 미리보기</title>
+<style>
+  @font-face { font-family: "Cheonui"; font-weight: 400; src: url("Cheonui-Regular.woff2") format("woff2"); }
+  @font-face { font-family: "Cheonui"; font-weight: 700; src: url("Cheonui-Bold.woff2") format("woff2"); }
+  @font-face { font-family: "Cheonui Deco"; font-weight: 400; src: url("CheonuiDeco-Regular.woff2") format("woff2"); }
+  @font-face { font-family: "Cheonui Deco"; font-weight: 700; src: url("CheonuiDeco-Bold.woff2") format("woff2"); }
+  @font-palette-values --obang     { font-family: "Cheonui", "Cheonui Deco"; base-palette: 0; }
+  @font-palette-values --dancheong { font-family: "Cheonui", "Cheonui Deco"; base-palette: 1; }
+  @font-palette-values --gold      { font-family: "Cheonui", "Cheonui Deco"; base-palette: 2; }
+  .deco { font-family: "Cheonui Deco", serif; }
+  :root { --bg: #ecdebe; --ink: #1c1610; --muted: #5a4632; --line: #cdb88f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Malgun Gothic", sans-serif; }
+  header, .controls, main, footer { max-width: 1100px; margin: 0 auto; padding-left: 16px; padding-right: 16px; }
+  header { padding-top: 20px; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  p.note { margin: 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding-top: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .controls label { font-size: 14px; display: flex; gap: 6px; align-items: center; }
+  .controls button { font: inherit; font-size: 14px; padding: 6px 12px; border: 1px solid var(--line); background: #f6ecd4; border-radius: 6px; cursor: pointer; }
+  .controls button[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  input[type=text] { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fbf5e6; min-width: 200px; flex: 1; }
+  .sample { font-family: "Cheonui", serif; font-palette: --obang; overflow-wrap: anywhere; margin: 26px 0 0; }
+  .s1 { font-size: clamp(56px, 11vw, 128px); font-weight: 700; line-height: 1.5; }
+  .s2 { font-size: clamp(34px, 6vw, 68px); font-weight: 700; line-height: 1.5; }
+  .s3 { font-size: clamp(22px, 3vw, 34px); line-height: 1.6; }
+  .body { font-size: 17px; line-height: 1.9; max-width: 42em; }
+  .tag { font-size: 12px; color: var(--muted); margin: 22px 0 -16px; }
+  footer { color: var(--muted); font-size: 13px; padding-bottom: 24px; padding-top: 24px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>천의체 (Cheonui) 2.1</h1>
+  <p class="note">단어의 첫 글자에만 구름 장식이 자동으로 붙습니다. 글자는 줄이지 않고, 장식은 글자 위 빈 공간에 뜹니다. 색이나 OpenType을 지원하지 않는 프로그램에서는 일반 명조로 보입니다.</p>
+</header>
+<div class="controls">
+  <button type="button" data-pal="--obang" aria-pressed="true">오방색</button>
+  <button type="button" data-pal="--dancheong" aria-pressed="false">단청</button>
+  <button type="button" data-pal="--gold" aria-pressed="false">금박</button>
+  <label><input type="checkbox" data-ss="ss01"> 모든 글자 (ss01)</label>
+  <label><input type="checkbox" data-ss="ss02"> 천의 리본 (ss02)</label>
+  <label><input type="checkbox" data-ss="ss03"> 장식 없음 (ss03)</label>
+  <label>글자색 <input type="color" id="ink" value="#1c1610"></label>
+  <input type="text" id="txt" value="병오년 새해 복 많이 받으세요" aria-label="미리보기 문구">
+</div>
+<main>
+  <p class="tag">제목 128px · Bold</p>
+  <div class="sample s1">십이지신도</div>
+  <p class="tag">부제 68px · Bold</p>
+  <div class="sample s2" id="custom">병오년 새해 복 많이 받으세요</div>
+  <p class="tag">천의체 장식(Deco) — 장식할 글자만 글꼴을 바꾸고 나머지는 ss03 · 68px Bold</p>
+  <div class="sample s2 mix" style="font-feature-settings:'ss03' 1"><span class="deco">십</span>이지신 <span class="deco">수</span>호 <span class="deco">부</span>적</div>
+  <p class="tag">소제목 34px · Regular</p>
+  <div class="sample s3">자축인묘 진사오미 신유술해 — 하늘을 지키는 열두 수호신</div>
+  <p class="tag">본문 17px · Regular (장식 없음 ss03)</p>
+  <p class="sample body" style="font-feature-settings:'ss03' 1">십이지신은 열두 방위와 시간을 지키는 수호신이다. 쥐·소·호랑이·토끼·용·뱀·말·양·원숭이·닭·개·돼지의 얼굴에 사람의 몸을 하고, 갑옷을 입고 무기를 든 모습으로 그려진다. 통일신라 왕릉의 둘레돌에 처음 새겨졌고, 조선 후기 민화에서는 구름을 타고 천의를 휘날리는 모습으로 친근하게 표현되었다.</p>
+</main>
+<footer>본명조(Noto Serif KR, SIL OFL 1.1) 기반 · 한글 11,172자 · 장식 글리프 16종 · 천의체 장식(Deco) 별도 글꼴 · PUA U+E000–E007(구름), U+E010–E017(리본)</footer>
+<script>
+  const samples = [...document.querySelectorAll('.sample:not(.body):not(.mix)')];
+  document.querySelectorAll('[data-pal]').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('[data-pal]').forEach(x => x.setAttribute('aria-pressed', x === b));
+    document.querySelectorAll('.sample').forEach(s => s.style.fontPalette = b.dataset.pal);
+  }));
+  const boxes = [...document.querySelectorAll('[data-ss]')];
+  boxes.forEach(c => c.addEventListener('change', () => {
+    const v = boxes.filter(x => x.checked).map(x => `"${x.dataset.ss}" 1`).join(', ');
+    samples.forEach(s => s.style.fontFeatureSettings = v);
+  }));
+  document.getElementById('ink').addEventListener('input', e => document.querySelectorAll('.sample').forEach(s => s.style.color = e.target.value));
+  document.getElementById('txt').addEventListener('input', e => document.getElementById('custom').textContent = e.target.value || ' ');
+</script>
+</body>
+</html>
