@@ -1,6 +1,6 @@
 # 바이브코딩 개발 폰트 배포본
 
-`바이브코딩_개발폰트` 폴더의 폰트 5종을 검토하고, 배포에 걸리는 문제를 고쳐 패키지로 묶은 결과입니다. 원본 폴더의 파일은 고치지 않았습니다.
+`개발폰트` 폴더의 폰트 5종을 검토하고, 배포에 걸리는 문제를 고쳐 패키지로 묶은 결과입니다. 원본 폴더의 파일은 고치지 않았습니다.
 
 ## 패키지
 
@@ -72,7 +72,7 @@ python 도구/verify.py
 
 ```bash
 pip install fonttools brotli pillow uharfbuzz
-python 도구/release.py <바이브코딩_개발폰트 폴더>
+python 도구/release.py <개발폰트 폴더>
 python 도구/verify.py
 ```
 
