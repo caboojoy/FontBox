@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Copy, Check, Heart, Download } from 'lucide-react'
 import { Font } from '@/types'
-import { generateCSSCode, getDefaultPreviewText, getLicenseLabel, getLanguageLabel, getCategoryLabel, getDownloadUrl, getOwnFontLinks, loadFontStyles } from '@/lib/fonts'
+import { generateCSSCode, getDefaultPreviewText, getLicenseLabel, getLanguageLabel, getCategoryLabel, getDownloadUrl, getOwnFontLinks, getFontStyleOptions, loadFontStyles } from '@/lib/fonts'
 import FontCard from '@/components/FontCard'
 
 interface Props {
@@ -64,7 +64,7 @@ export default function FontDetailClient({ font, similarFonts }: Props) {
   }, [previewText])
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(generateCSSCode(font))
+    navigator.clipboard.writeText(cssCode)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
@@ -86,6 +86,36 @@ export default function FontDetailClient({ font, similarFonts }: Props) {
 
   const sampleTexts = SAMPLE_TEXTS[font.language] ?? SAMPLE_TEXTS.korean
   const ownLinks = getOwnFontLinks(font)
+
+  // 색 팔레트·스타일 세트 선택 (해당 기능이 있는 폰트만)
+  const styleOptions = getFontStyleOptions(font)
+  const [palette, setPalette]   = useState(0)
+  const [features, setFeatures] = useState<string[]>([])
+  const paletteName = (i: number) => `--${font.slug}-palette-${i}`
+  const paletteRule = (i: number) =>
+    `@font-palette-values ${paletteName(i)} { font-family: "${font.css_family}"; base-palette: ${i}; }`
+  const featureValue = (tags: string[]) => (tags.length ? tags.map(t => `"${t}"`).join(', ') : 'normal')
+  const variantStyle = (tags: string[] = features) =>
+    (styleOptions
+      ? { fontPalette: paletteName(palette), fontFeatureSettings: featureValue(tags) }
+      : {}) as React.CSSProperties
+  const toggleFeature = (tag: string) =>
+    setFeatures(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]))
+
+  // 선택한 색·장식을 CSS 코드에도 반영 (기본 상태면 추가하지 않음)
+  const extraCss = (() => {
+    if (!styleOptions || (palette === 0 && features.length === 0)) return ''
+    const lines = ['/* 선택한 색·장식 */']
+    const decl: string[] = []
+    if (palette !== 0) {
+      lines.push(paletteRule(palette))
+      decl.push(`font-palette: ${paletteName(palette)};`)
+    }
+    if (features.length) decl.push(`font-feature-settings: ${featureValue(features)};`)
+    lines.push(`.my-font {\n  ${decl.join('\n  ')}\n}`)
+    return lines.join('\n')
+  })()
+  const cssCode = generateCSSCode(font, extraCss)
 
   return (
     <div style={{ maxWidth: 896, margin: "0 auto", padding: "96px 24px 80px" }}>
@@ -163,6 +193,41 @@ export default function FontDetailClient({ font, similarFonts }: Props) {
           </div>
         )}
 
+        {/* 색 팔레트·장식 선택 */}
+        {styleOptions && (
+          <div className="mb-6">
+            <style>{styleOptions.palettes.map(p => paletteRule(p.index)).join('\n')}</style>
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              {styleOptions.palettes.map(p => (
+                <button key={p.index} type="button" onClick={() => setPalette(p.index)}
+                  aria-pressed={palette === p.index}
+                  className="px-3 py-1.5 rounded-full text-sm font-medium transition-all"
+                  style={{
+                    background: palette === p.index ? 'var(--text-primary)' : 'transparent',
+                    color: palette === p.index ? 'white' : 'var(--text-muted)',
+                    border: '1px solid ' + (palette === p.index ? 'var(--text-primary)' : 'var(--border)'),
+                  }}>
+                  {p.label}
+                </button>
+              ))}
+              {styleOptions.features.map(f => (
+                <label key={f.tag} className="flex items-center gap-1.5 text-sm ml-2 cursor-pointer"
+                  style={{ color: 'var(--text-primary)' }}>
+                  <input type="checkbox" checked={features.includes(f.tag)} onChange={() => toggleFeature(f.tag)} />
+                  {f.label} <span style={{ color: 'var(--text-muted)' }}>({f.tag})</span>
+                </label>
+              ))}
+              {(palette !== 0 || features.length > 0) && (
+                <button type="button" onClick={() => { setPalette(0); setFeatures([]) }}
+                  className="text-sm ml-2 underline" style={{ color: 'var(--text-muted)' }}>
+                  기본으로
+                </button>
+              )}
+            </div>
+            <p className="text-xs" style={{ color: 'var(--text-muted)', lineHeight: 1.6 }}>{styleOptions.note}</p>
+          </div>
+        )}
+
         {/* 크기 슬라이더 */}
         <div className="flex items-center gap-4 mb-4">
           <input type="range" min={16} max={80} value={previewSize}
@@ -181,8 +246,9 @@ export default function FontDetailClient({ font, similarFonts }: Props) {
             fontFamily: fontLoaded ? `'${font.css_family}', sans-serif` : 'inherit',
             fontSize: `${previewSize}px`,
             color: 'var(--text-primary)',
-            lineHeight: 1.3,
+            lineHeight: styleOptions ? 1.6 : 1.3,
             minHeight: '60px',
+            ...variantStyle(),
           }}
           contentEditable
           suppressContentEditableWarning
@@ -213,6 +279,7 @@ export default function FontDetailClient({ font, similarFonts }: Props) {
                 fontWeight: Number(w),
                 fontSize: '20px',
                 color: 'var(--text-primary)',
+                ...variantStyle(),
               }}>
                 {previewText || getDefaultPreviewText(font)}
               </span>
@@ -220,6 +287,33 @@ export default function FontDetailClient({ font, similarFonts }: Props) {
           ))}
         </div>
       </div>
+
+      {/* 장식 비교 — 같은 문구를 기본 상태와 각 스타일 세트로 나란히 */}
+      {styleOptions && (
+        <div className="font-card p-6 mb-6 animate-fade-up">
+          <h2 className="font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>장식 비교</h2>
+          <div className="space-y-2">
+            {[{ tag: '', label: '기본' }, ...styleOptions.features].map(f => (
+              <div key={f.tag || 'default'} className="flex items-center gap-4">
+                <span className="text-xs w-24 shrink-0" style={{ color: 'var(--text-muted)' }}>
+                  {f.label}{f.tag ? ` (${f.tag})` : ''}
+                </span>
+                <span style={{
+                  fontFamily: fontLoaded ? `'${font.css_family}', sans-serif` : 'inherit',
+                  fontWeight: 700,
+                  fontSize: '28px',
+                  lineHeight: 1.7,
+                  color: 'var(--text-primary)',
+                  overflowWrap: 'anywhere',
+                  ...variantStyle(f.tag ? [f.tag] : []),
+                }}>
+                  {previewText || getDefaultPreviewText(font)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* CSS 코드 */}
       <div className="font-card p-6 mb-6 animate-fade-up delay-100">
@@ -236,7 +330,7 @@ export default function FontDetailClient({ font, similarFonts }: Props) {
           </button>
         </div>
         <pre className="code-block text-sm overflow-x-auto whitespace-pre-wrap">
-          {generateCSSCode(font)}
+          {cssCode}
         </pre>
       </div>
 
