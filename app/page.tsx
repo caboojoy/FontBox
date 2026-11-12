@@ -6,6 +6,7 @@ import FilterBar from '@/components/FilterBar'
 import PreviewControl from '@/components/PreviewControl'
 import { Font, FontFilters } from '@/types'
 import { supabase } from '@/lib/supabase-client'
+import { PINNED_FONT_SLUGS } from '@/lib/fonts'
 
 function escapeLike(s: string): string {
   return s.replace(/[%_\\]/g, '\\$&')
@@ -96,11 +97,16 @@ export default function HomePage() {
   }, [])
 
   // 쿼리 빌더 공통 함수
-  const buildQuery = useCallback((currentFilters: FontFilters) => {
+  // pinned: 'only' = 상단 고정 폰트만, 'exclude' = 고정 폰트를 뺀 나머지 (페이지 범위가 어긋나지 않게 따로 조회)
+  const buildQuery = useCallback((currentFilters: FontFilters, pinned: 'only' | 'exclude' = 'exclude') => {
     let query = supabase
       .schema('fonts')
       .from('fonts')
       .select('*')
+
+    query = pinned === 'only'
+      ? query.in('slug', PINNED_FONT_SLUGS)
+      : query.not('slug', 'in', `(${PINNED_FONT_SLUGS.join(',')})`)
 
     if (currentFilters.language !== 'all') {
       if (currentFilters.language === 'korean')  query = query.eq('supports_korean', true)
@@ -176,7 +182,11 @@ export default function HomePage() {
           ? buildQuery(filters)
           : buildQuery(filters).range(0, PAGE_SIZE - 1)
 
-        const { data, error: qErr } = await query
+        // 상단 고정 폰트는 같은 필터·검색 조건으로 따로 불러와 맨 앞에 둔다
+        const [{ data, error: qErr }, { data: pinnedData }] = await Promise.all([
+          query,
+          buildQuery(filters, 'only'),
+        ])
 
         if (!isMounted.current) return
 
@@ -186,7 +196,10 @@ export default function HomePage() {
           setHasMore(false)
         } else {
           const result = (data as Font[]) || []
-          setFonts(result)
+          const pinned = ((pinnedData as Font[]) || []).sort(
+            (a, b) => PINNED_FONT_SLUGS.indexOf(a.slug) - PINNED_FONT_SLUGS.indexOf(b.slug),
+          )
+          setFonts([...pinned, ...result])
           setHasMore(!isSearching && result.length === PAGE_SIZE)
         }
       } catch (e) {

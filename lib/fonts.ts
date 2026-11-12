@@ -116,6 +116,15 @@ export function getOwnFontLinks(font: Pick<Font, 'slug'>) {
   }
 }
 
+// 폰트 목록 맨 위에 고정하는 폰트 — 적힌 순서대로 나온다 (필터·검색에 맞는 것만)
+export const PINNED_FONT_SLUGS = [
+  'mungtuk-marker',
+  'suyeom-brush',
+  'suyeom-mustache',
+  'hwangya-western',
+  'cheonui',
+]
+
 // 색 팔레트(COLR)와 스타일 세트(OpenType)를 가진 폰트 — 상세 페이지에서 눌러 볼 수 있게 한다
 export interface FontStyleOptions {
   palettes: { index: number; label: string }[]          // 0번이 기본
