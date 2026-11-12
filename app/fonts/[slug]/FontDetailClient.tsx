@@ -196,7 +196,8 @@ export default function FontDetailClient({ font, similarFonts }: Props) {
         {/* 색 팔레트·장식 선택 */}
         {styleOptions && (
           <div className="mb-6">
-            <style>{styleOptions.palettes.map(p => paletteRule(p.index)).join('\n')}</style>
+            {/* 따옴표가 든 CSS 는 텍스트 자식으로 넣으면 서버에서 이스케이프되어 하이드레이션이 어긋난다 */}
+            <style dangerouslySetInnerHTML={{ __html: styleOptions.palettes.map(p => paletteRule(p.index)).join('\n') }} />
             <div className="flex flex-wrap items-center gap-2 mb-2">
               {styleOptions.palettes.map(p => (
                 <button key={p.index} type="button" onClick={() => setPalette(p.index)}
