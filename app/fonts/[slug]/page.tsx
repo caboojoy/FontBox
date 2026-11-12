@@ -7,6 +7,10 @@
   // force-dynamic 제거 → 정적 생성으로 전환
   // export const dynamic = 'force-dynamic'  ← 이 줄 삭제
 
+  // 1시간마다 다시 생성 — DB에 새로 넣은 폰트가 재배포 없이 열리고,
+  // 등록 전에 한 번 404로 응답한 주소도 풀린다
+  export const revalidate = 3600
+
   // React cache로 같은 요청 내 중복 쿼리 방지
   const getCachedFont = cache(getFontBySlug)
 
