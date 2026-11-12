@@ -57,11 +57,14 @@ export function loadFontStyles(
   return () => { if (el && document.head.contains(el)) document.head.removeChild(el) }
 }
 
+export const SITE_URL = 'https://myfontbox.vercel.app'
+
 export function generateCSSCode(font: Font): string {
   const license  = `/* 라이선스: ${font.license} | 상업적 이용: ${font.is_commercial ? '가능 ✓' : '불가 ✗'} */`
+  // 사이트에 직접 올린 웹폰트(/webfonts/…)는 다른 사이트에서도 쓸 수 있게 전체 주소로 바꿔서 보여준다
   const importLine = font.cdn_url
     ? `@import url('${font.cdn_url}');`
-    : (font.webfont_css ?? '')
+    : (font.webfont_css ?? '').replace(/url\("\/webfonts\//g, `url("${SITE_URL}/webfonts/`)
   const cssClass = `.my-font {\n  font-family: '${font.css_family}', ${
     font.language === 'english' ? 'sans-serif' : "'Apple SD Gothic Neo', sans-serif"
   };\n}`
@@ -92,9 +95,33 @@ export function getCategoryLabel(category: string): string {
   return ALL_CATEGORIES.find(c => c.value === category)?.label || category
 }
 
+// FontBox 자체 제작 폰트 — slug 별 배포 패키지 이름 (GitHub 릴리스 zip, 저장소의 OFL.txt·사용 안내)
+const OWN_RELEASE = 'https://github.com/caboojoy/FontBox/releases/download/fonts-v1.0'
+const OWN_DOCS    = 'https://github.com/caboojoy/FontBox/blob/main/개발폰트/배포'
+const OWN_PACKAGES: Record<string, string> = {
+  'cheonui':         'Cheonui-2.1',
+  'suyeom-brush':    'Suyeom-1.0',
+  'suyeom-mustache': 'Suyeom-1.0',
+  'mungtuk-marker':  'MungtukMarker-1.0',
+  'hwangya-western': 'HwangyaWestern-1.0',
+}
+
+export function getOwnFontLinks(font: Pick<Font, 'slug'>) {
+  const pkg = OWN_PACKAGES[font.slug]
+  if (!pkg) return null
+  return {
+    download: `${OWN_RELEASE}/${pkg}.zip`,
+    license:  `${OWN_DOCS}/${pkg}/OFL.txt`,
+    guide:    `${OWN_DOCS}/${pkg}/README.md`,
+  }
+}
+
 // 폰트별 다운로드/원본 페이지 URL 자동 생성
 // DB 변경 없이 기존 foundry, css_family 데이터 활용
 export function getDownloadUrl(font: Font): string {
+  const own = getOwnFontLinks(font)
+  if (own) return own.download
+
   const family = font.css_family.replace(/ /g, '+')
 
   switch (font.foundry) {
