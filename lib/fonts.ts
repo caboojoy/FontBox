@@ -59,7 +59,7 @@ export function loadFontStyles(
 
 export const SITE_URL = 'https://myfontbox.vercel.app'
 
-export function generateCSSCode(font: Font): string {
+export function generateCSSCode(font: Font, extraCss = ''): string {
   const license  = `/* 라이선스: ${font.license} | 상업적 이용: ${font.is_commercial ? '가능 ✓' : '불가 ✗'} */`
   // 사이트에 직접 올린 웹폰트(/webfonts/…)는 다른 사이트에서도 쓸 수 있게 전체 주소로 바꿔서 보여준다
   const importLine = font.cdn_url
@@ -69,7 +69,7 @@ export function generateCSSCode(font: Font): string {
     font.language === 'english' ? 'sans-serif' : "'Apple SD Gothic Neo', sans-serif"
   };\n}`
   const usage = `/* 사용 예시 */\nbody {\n  font-family: '${font.css_family}', sans-serif;\n}`
-  return [license, importLine, '', cssClass, '', usage].join('\n')
+  return [license, importLine, '', cssClass, '', usage, ...(extraCss ? ['', extraCss] : [])].join('\n')
 }
 
 export function getLicenseLabel(license: string): string {
@@ -114,6 +114,32 @@ export function getOwnFontLinks(font: Pick<Font, 'slug'>) {
     license:  `${OWN_DOCS}/${pkg}/OFL.txt`,
     guide:    `${OWN_DOCS}/${pkg}/README.md`,
   }
+}
+
+// 색 팔레트(COLR)와 스타일 세트(OpenType)를 가진 폰트 — 상세 페이지에서 눌러 볼 수 있게 한다
+export interface FontStyleOptions {
+  palettes: { index: number; label: string }[]          // 0번이 기본
+  features: { tag: string; label: string }[]
+  note: string
+}
+const STYLE_OPTIONS: Record<string, FontStyleOptions> = {
+  'cheonui': {
+    palettes: [
+      { index: 0, label: '오방색' },
+      { index: 1, label: '단청' },
+      { index: 2, label: '금박' },
+    ],
+    features: [
+      { tag: 'ss01', label: '모든 글자' },
+      { tag: 'ss02', label: '천의 리본' },
+      { tag: 'ss03', label: '장식 없음' },
+    ],
+    note: '색과 장식 선택은 웹 브라우저에서 동작합니다. 워드·한글·포토샵에서는 장식할 글자만 다운로드 파일의 ‘천의체 장식’ 글꼴로 바꿔 쓰세요.',
+  },
+}
+
+export function getFontStyleOptions(font: Pick<Font, 'slug'>): FontStyleOptions | null {
+  return STYLE_OPTIONS[font.slug] ?? null
 }
 
 // 폰트별 다운로드/원본 페이지 URL 자동 생성
