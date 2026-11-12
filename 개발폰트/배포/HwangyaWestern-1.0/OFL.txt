@@ -1,6 +1,6 @@
 Copyright (c) 2011 by Sorkin Type Co (www.sorkintype.com),
 with Reserved Font Name "Rye".
-Copyright 2017-2022 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'. (Noto Serif CJK)
+Copyright 2017-2023 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'. (Noto Serif CJK)
 Modifications (황야웨스턴 / Hwangya Western) Copyright 2026 도겸.
 
 This Font Software is licensed under the SIL Open Font License, Version 1.1.
