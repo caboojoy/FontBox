@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, Copy, Check, Heart, Download } from 'lucide-react'
 import { Font } from '@/types'
-import { generateCSSCode, getDefaultPreviewText, getLicenseLabel, getLanguageLabel, getCategoryLabel, getDownloadUrl, loadFontStyles } from '@/lib/fonts'
+import { generateCSSCode, getDefaultPreviewText, getLicenseLabel, getLanguageLabel, getCategoryLabel, getDownloadUrl, getOwnFontLinks, loadFontStyles } from '@/lib/fonts'
 import FontCard from '@/components/FontCard'
 
 interface Props {
@@ -85,6 +85,7 @@ export default function FontDetailClient({ font, similarFonts }: Props) {
   }
 
   const sampleTexts = SAMPLE_TEXTS[font.language] ?? SAMPLE_TEXTS.korean
+  const ownLinks = getOwnFontLinks(font)
 
   return (
     <div style={{ maxWidth: 896, margin: "0 auto", padding: "96px 24px 80px" }}>
@@ -144,6 +145,23 @@ export default function FontDetailClient({ font, similarFonts }: Props) {
             폰트 다운로드
           </a>
         </div>
+
+        {/* 자체 제작 폰트: 라이선스와 패키지 안내 */}
+        {ownLinks && (
+          <div className="rounded-lg px-4 py-3 mb-8 text-sm"
+            style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid var(--border)', color: 'var(--text-muted)', lineHeight: 1.7 }}>
+            <p>
+              <strong style={{ color: 'var(--text-primary)' }}>SIL Open Font License 1.1</strong>
+              {' — '}개인·기업 모두 인쇄물, 웹, 영상, 로고, 제품에 상업적으로 쓸 수 있습니다. 폰트 파일만 따로 판매하는 것은 금지됩니다.
+            </p>
+            <p>
+              다운로드 파일(zip)에는 설치용 폰트, 웹폰트, 사용 안내가 들어 있습니다.{' '}
+              <a href={ownLinks.license} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>라이선스 전문</a>
+              {' · '}
+              <a href={ownLinks.guide} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>사용 안내</a>
+            </p>
+          </div>
+        )}
 
         {/* 크기 슬라이더 */}
         <div className="flex items-center gap-4 mb-4">
