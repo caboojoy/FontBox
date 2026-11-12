@@ -60,7 +60,9 @@ def used_name_ids(font):
 HOLDER = '도겸'                          # 수정분 저작권자. 원본 천의체에는 이름이 비어 있어 여기서 채운다
 HOLDER_FIX = [('(천의체 / Cheonui) © 2026.', '(천의체 / Cheonui) © 2026 %s.' % HOLDER),
               ('(천의체 / Cheonui) Copyright 2026.', '(천의체 / Cheonui) Copyright 2026 %s.' % HOLDER),
-              ('Cheonui ornaments: 2026.', 'Cheonui ornaments: %s, 2026.' % HOLDER)]
+              ('Cheonui ornaments: 2026.', 'Cheonui ornaments: %s, 2026.' % HOLDER),
+              # 황야웨스턴: Noto Serif 의 저작권 연도를 폰트 안쪽 표기(© 2017-2023 Adobe)에 맞춘다
+              ('Copyright 2017 Adobe, Reserved', 'Copyright 2017-2023 Adobe, Reserved')]
 
 
 def fix_holder(text):
@@ -170,12 +172,13 @@ MARKER = ('Mungtuk Marker', '뭉툭마커')
 MARKER_FIX = [('Gyeomson Marker', MARKER[0]), ('GyeomsonMarker', MARKER[0].replace(' ', '')), ('겸손마커', MARKER[1])]
 
 
-def copy_builder(pkg):
+def copy_builder(pkg, fix_years=False):
     builder = ROOT / 'font-builder_천의체'      # 폴더 이름과 달리 마커·황야웨스턴 생성기가 들어 있다
     for n in ('preview.py', 'OFL-gamjaflower.txt', 'OFL-rye.txt'): copy(builder / n, pkg / '소스' / n)
     for n, out in (('build.py', 'build.py'), ('CLAUDE.md', '제작노트.md')):     # 소스·문서의 글꼴 이름도 맞춘다
         text = (builder / n).read_text(encoding='utf-8')
         for old, new in MARKER_FIX: text = text.replace(old, new)
+        if fix_years: text = fix_holder(text)
         (pkg / '소스' / out).write_text(text, encoding='utf-8', newline='')
 
 
@@ -241,12 +244,12 @@ def western(tmp):
     (pkg / 'OFL.txt').write_text(ofl_text([
         'Copyright (c) 2011 by Sorkin Type Co (www.sorkintype.com),',
         'with Reserved Font Name "Rye".',
-        "Copyright 2017-2022 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'. (Noto Serif CJK)",
+        "Copyright 2017-2023 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'. (Noto Serif CJK)",
         'Modifications (황야웨스턴 / Hwangya Western) Copyright 2026 도겸.']), encoding='utf-8')
     specimen(pkg / 'HwangyaWestern-Regular.ttf', pkg / 'specimen.png',
              ['황야웨스턴 Hwangya Western', '황야의 무법자 WANTED', '석양이 지는 목장 0123456789',
               '~다람쥐 헌 쳇바퀴에 타고파 · 뷁 쀍 똠방각하 · The quick brown fox jumps!?'])
-    copy_builder(pkg); make_zip(pkg)
+    copy_builder(pkg, fix_years=True); make_zip(pkg)
 
 
 if __name__ == '__main__':

@@ -171,7 +171,7 @@ def main():
         cpr = 'Derived from Gamja Flower, Copyright (c) YoonDesign Inc. Modifications 2026 by 도겸.'
     else:
         cpr = ('Latin derived from Rye, Copyright (c) 2011 Sorkin Type Co, Reserved Font Name "Rye". '
-               'Hangul derived from Noto Serif CJK, Copyright 2017 Adobe, Reserved Font Name "Source". Modifications 2026 by 도겸.')
+               'Hangul derived from Noto Serif CJK, Copyright 2017-2023 Adobe, Reserved Font Name "Source". Modifications 2026 by 도겸.')
     names = {'familyName': FAMILY, 'styleName': 'Regular', 'uniqueFontIdentifier': FAMILY.replace(' ', '') + '-2026',
              'fullName': FAMILY, 'psName': FAMILY.replace(' ', '') + '-Regular', 'version': 'Version 1.000',
              'copyright': cpr, 'licenseDescription': lic, 'licenseInfoURL': 'https://openfontlicense.org'}
