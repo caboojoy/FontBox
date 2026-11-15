@@ -8,7 +8,7 @@
 |---|---|---|---|
 | `Cheonui-2.1.zip` (16.1MB) | 천의체, 천의체 장식 | TTF 4개 + WOFF2 4개 | 11,172자 |
 | `Suyeom-1.0.zip` (4.7MB) | 수염체 붓털, 수염체 콧수염 | OTF 2개 + WOFF2 2개 | 2,350자 |
-| `MungtukMarker-1.0.zip` (8.1MB) | 뭉툭마커 | TTF + WOFF2 | 11,172자 |
+| `MungtukMarker-1.0.zip` (8.4MB, 폰트 버전 1.1) | 뭉툭마커 | TTF + WOFF2 | 11,172자 |
 | `HwangyaWestern-1.0.zip` (15.5MB) | 황야웨스턴 | TTF + WOFF2 | 11,172자 |
 
 각 패키지에는 폰트, 웹폰트, `OFL.txt`, `README.md`(사용 안내), 견본 이미지, `소스/`(생성 스크립트)가 들어 있습니다.
