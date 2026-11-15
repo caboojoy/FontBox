@@ -70,10 +70,30 @@ def fix_holder(text):
     return text
 
 
-def finalize(src, dst, fit_descent=False, rename=None):
+def rescale(f, k):
+    """글자 윤곽선과 글자폭을 k 배로 키운다(TrueType 전용). 세로 범위(win)는 커진 글자에 맞춘다."""
+    glyf, hmtx, os2 = f['glyf'], f['hmtx'], f['OS/2']
+    ymax = ymin = 0
+    for gn in f.getGlyphOrder():
+        g = glyf[gn]; adv = int(round(hmtx[gn][0] * k))
+        assert not g.isComposite()
+        if g.numberOfContours > 0:
+            g.coordinates.scale((k, k)); g.coordinates.toInt(); g.recalcBounds(glyf)
+            ymax, ymin = max(ymax, g.yMax), min(ymin, g.yMin)
+            hmtx[gn] = (adv, g.xMin)
+        else:
+            hmtx[gn] = (adv, 0)
+    os2.usWinAscent, os2.usWinDescent = max(os2.sTypoAscender, ymax), max(-os2.sTypoDescender, -ymin)
+    os2.xAvgCharWidth = int(round(os2.xAvgCharWidth * k))
+    os2.sxHeight = os2.sCapHeight = 0            # finalize 가 커진 글자에서 다시 잰다
+
+
+def finalize(src, dst, fit_descent=False, rename=None, scale=None, revision=None):
     """src 폰트를 읽어 배포용으로 고친 뒤 dst(.ttf/.otf)와 같은 이름의 .woff2 로 저장한다."""
     f = TTFont(src)
     name, os2, head, hhea, post = f['name'], f['OS/2'], f['head'], f['hhea'], f['post']
+    if scale: rescale(f, scale)
+    if revision: head.fontRevision = revision
     for n in name.names:
         if n.nameID in (0, 9): n.string = fix_holder(n.toUnicode())
     if rename:                           # (영문 이름, 한글 이름): 빌드된 폰트의 이름을 배포 이름으로 바꾼다
@@ -193,6 +213,9 @@ def copy(src, dst):
 
 # 마커 글꼴은 '겸손마커'로 빌드된 것을 '뭉툭마커'로 이름을 바꿔 배포한다
 MARKER = ('Mungtuk Marker', '뭉툭마커')
+# 바탕 폰트(감자꽃)의 글자가 작아 다른 글꼴과 같은 포인트에서 작게 보인다. 한글 글자폭이
+# 천의체·황야웨스턴과 같아지도록(821 → 969) 전체를 키우고, 버전을 1.1 로 올린다
+MARKER_SCALE, MARKER_REVISION = 1.18, 1.1
 MARKER_FIX = [('Gyeomson Marker', MARKER[0]), ('GyeomsonMarker', MARKER[0].replace(' ', '')), ('겸손마커', MARKER[1])]
 
 
@@ -256,7 +279,8 @@ def suyeom(tmp):
 
 def marker(tmp):
     print('뭉툭마커'); pkg = OUT / 'MungtukMarker-1.0'
-    finalize(tmp / 'two' / 'GyeomsonMarker-Regular.ttf', pkg / 'MungtukMarker-Regular.ttf', rename=MARKER)
+    finalize(tmp / 'two' / 'GyeomsonMarker-Regular.ttf', pkg / 'MungtukMarker-Regular.ttf', rename=MARKER,
+             scale=MARKER_SCALE, revision=MARKER_REVISION)
     put_text(pkg / 'OFL.txt', ofl_text([
         'Copyright (c) YoonDesign Inc. All Rights Reserved. (Gamja Flower)',
         'Modifications (뭉툭마커 / Mungtuk Marker) Copyright 2026 도겸.']))
