@@ -2,6 +2,7 @@
   import { notFound } from 'next/navigation'
   import { cache } from 'react'
   import { getFontBySlug, getSimilarFonts, getAllFontSlugs } from '@/actions/fonts'
+  import { getCategoryLabel, getLicenseLabel } from '@/lib/fonts'
   import FontDetailClient from './FontDetailClient'
 
   // force-dynamic 제거 → 정적 생성으로 전환
@@ -28,7 +29,13 @@
     const font = await getCachedFont(params.slug)  // cache 적용
     if (!font) return {}
     const title = `${font.name} — 무료 웹폰트`
-    const description = `${font.name}을(를) 무료로 사용하세요. ${font.category} 계열, ${font.license} 라이선스. 웹폰트 CSS 코드를 바로 복사하세요.`
+    // 이름 뒤에 '폰트'를 붙여 조사(을/를)가 이름의 받침에 따라 달라지지 않게 하고,
+    // 분류·라이선스는 내부 값(myeongjo, ofl) 대신 화면에 쓰는 이름으로 적는다
+    const description =
+      `${font.name} 폰트를 무료로 사용하세요. ` +
+      `${getCategoryLabel(font.category)} 계열, ${getLicenseLabel(font.license)} 라이선스` +
+      `${font.is_commercial ? ', 상업적 사용 가능' : ''}. ` +
+      `미리보기와 웹폰트 CSS 코드를 바로 확인하세요.`
     const path = `/fonts/${font.slug}`
     return {
       title,
@@ -42,6 +49,12 @@
         type: 'website',
         locale: 'ko_KR',
         siteName: 'FontBox',
+      },
+      // 트위터(X) 공유에도 사이트 공통 문구 대신 이 폰트의 제목·설명이 나오게 한다
+      twitter: {
+        card: 'summary_large_image',
+        title: `${title} | FontBox`,
+        description,
       },
     }
   }
