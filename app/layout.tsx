@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     default: 'FontBox — 한글·영문 무료 웹폰트 모음',
     template: '%s | FontBox',
   },
-  description: '한글과 영문 무료 웹폰트 55개+를 한 곳에서. 실시간 미리보기, AI 폰트 추천, CSS 코드 자동 생성. 상업적 이용 가능한 무료 폰트.',
+  description: '한글과 영문 무료 웹폰트 700개+를 한 곳에서. 실시간 미리보기, AI 폰트 추천, CSS 코드 자동 생성. 상업적 이용 가능한 무료 폰트.',
   keywords: [
     '웹폰트', '한글폰트', '영문폰트', '무료폰트', '폰트추천',
     '상업용폰트', '무료한글폰트', 'webfont', 'free font', 'google fonts',
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: 'FontBox — 한글·영문 무료 웹폰트 모음',
-    description: '한글과 영문 무료 웹폰트 55개+. AI 추천, 실시간 미리보기, CSS 코드 자동 생성.',
+    description: '한글과 영문 무료 웹폰트 700개+. AI 추천, 실시간 미리보기, CSS 코드 자동 생성.',
     type: 'website',
     locale: 'ko_KR',
     url: './',   // 각 페이지 자신의 주소 (metadataBase 기준)
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'FontBox — 한글·영문 무료 웹폰트 모음',
-    description: '한글과 영문 무료 웹폰트 55개+. AI 추천, 실시간 미리보기.',
+    description: '한글과 영문 무료 웹폰트 700개+. AI 추천, 실시간 미리보기.',
   },
   // './' 는 각 페이지 자신의 주소로 풀린다. 홈 주소를 고정해 두면 모든 하위 페이지가
   // "원본은 홈"이라고 선언하게 되어 검색엔진이 중복으로 처리한다
