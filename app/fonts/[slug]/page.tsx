@@ -27,9 +27,22 @@
   export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const font = await getCachedFont(params.slug)  // cache 적용
     if (!font) return {}
+    const title = `${font.name} — 무료 웹폰트`
+    const description = `${font.name}을(를) 무료로 사용하세요. ${font.category} 계열, ${font.license} 라이선스. 웹폰트 CSS 코드를 바로 복사하세요.`
+    const path = `/fonts/${font.slug}`
     return {
-      title: `${font.name} — 무료 웹폰트`,
-      description: `${font.name}을(를) 무료로 사용하세요. ${font.category} 계열, ${font.license} 라이선스. 웹폰트 CSS 코드를 바로 복사하세요.`,
+      title,
+      description,
+      // 이 페이지 자신의 주소를 대표 주소로 — 검색엔진이 폰트 페이지를 따로 색인하게 한다
+      alternates: { canonical: path },
+      openGraph: {
+        title: `${title} | FontBox`,
+        description,
+        url: path,
+        type: 'website',
+        locale: 'ko_KR',
+        siteName: 'FontBox',
+      },
     }
   }
 

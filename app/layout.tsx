@@ -5,7 +5,7 @@ import './globals.css'
 import Image from 'next/image'
 
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://your-domain.vercel.app'
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://myfontbox.vercel.app').trim()
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     description: '한글과 영문 무료 웹폰트 55개+. AI 추천, 실시간 미리보기, CSS 코드 자동 생성.',
     type: 'website',
     locale: 'ko_KR',
-    url: SITE_URL,
+    url: './',   // 각 페이지 자신의 주소 (metadataBase 기준)
     siteName: 'FontBox',
   },
   twitter: {
@@ -40,8 +40,10 @@ export const metadata: Metadata = {
     title: 'FontBox — 한글·영문 무료 웹폰트 모음',
     description: '한글과 영문 무료 웹폰트 55개+. AI 추천, 실시간 미리보기.',
   },
+  // './' 는 각 페이지 자신의 주소로 풀린다. 홈 주소를 고정해 두면 모든 하위 페이지가
+  // "원본은 홈"이라고 선언하게 되어 검색엔진이 중복으로 처리한다
   alternates: {
-    canonical: SITE_URL,
+    canonical: './',
   },
   verification: {
     google: 'a5NOfXxOOAjwioA0dxpf1uvUE1i9vZUhZhpw8F3FEwk',
