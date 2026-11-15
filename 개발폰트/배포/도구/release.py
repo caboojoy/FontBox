@@ -160,11 +160,35 @@ def specimen(font_path, out, lines, size=96):
     img = Image.new('RGB', (w, h), '#f4efe4'); d = ImageDraw.Draw(img); y = 50
     for t, fn in rows:
         d.text((60, y), t, font=fn, fill='#1c1610'); y += int(fn.size * 1.45)
-    img.save(out)
+    buf = io.BytesIO(); img.save(buf, format='PNG'); put(out, buf.getvalue())
+
+
+TEXT = {'.txt', '.md', '.py', '.html', '.jsx', '.css', '.json'}
+
+
+def lf(data):
+    return data.replace(b'\r\n', b'\n')
+
+
+def put(dst, data):
+    """dst 에 data(bytes)를 쓴다. 내용이 같으면 건드리지 않는다.
+
+    글 파일은 줄바꿈(CRLF/LF)만 다른 경우도 같은 것으로 본다. 윈도우에서 깃이 CRLF 로
+    체크아웃한 파일을 LF 로 덮어쓰면, 내용이 같아도 깃이 '수정됨'으로 보고 pull 을 막기 때문이다.
+    """
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if dst.exists():
+        old = dst.read_bytes()
+        if old == data or (dst.suffix.lower() in TEXT and lf(old) == lf(data)): return
+    dst.write_bytes(data)
+
+
+def put_text(dst, text):
+    put(dst, text.encode('utf-8'))
 
 
 def copy(src, dst):
-    dst.parent.mkdir(parents=True, exist_ok=True); shutil.copy2(src, dst)
+    put(dst, src.read_bytes())
 
 
 # 마커 글꼴은 '겸손마커'로 빌드된 것을 '뭉툭마커'로 이름을 바꿔 배포한다
@@ -179,14 +203,19 @@ def copy_builder(pkg, fix_years=False):
         text = (builder / n).read_text(encoding='utf-8')
         for old, new in MARKER_FIX: text = text.replace(old, new)
         if fix_years: text = fix_holder(text)
-        (pkg / '소스' / out).write_text(text, encoding='utf-8', newline='')
+        put_text(pkg / '소스' / out, text)
 
 
 def make_zip(pkg):
     zp = OUT / (pkg.name + '.zip')
     with zipfile.ZipFile(zp, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for p in sorted(pkg.rglob('*')):
-            if p.is_file(): z.write(p, Path(pkg.name) / p.relative_to(pkg))
+            if not p.is_file(): continue
+            info = zipfile.ZipInfo.from_file(p, (Path(pkg.name) / p.relative_to(pkg)).as_posix())
+            info.compress_type = zipfile.ZIP_DEFLATED
+            data = p.read_bytes()
+            # 글 파일은 LF 로 통일해 담는다 — 어느 PC 에서 만들어도 zip 내용이 같아진다
+            z.writestr(info, lf(data) if p.suffix.lower() in TEXT else data, compresslevel=9)
     print('  -> %s  %.1f MB' % (zp.name, zp.stat().st_size / 1e6))
 
 
@@ -211,8 +240,7 @@ def cheonui():
     copy(src / '사용안내.md', pkg / 'README.md')
     for p in [src / 'OFL.txt'] + list((src / '소스').glob('*.py')):     # 저작권자 이름을 채워서 복사
         dst = pkg / p.name if p.suffix == '.txt' else pkg / '소스' / p.name
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        dst.write_text(fix_holder(p.read_text(encoding='utf-8')), encoding='utf-8', newline='')
+        put_text(dst, fix_holder(p.read_text(encoding='utf-8')))
     make_zip(pkg)
 
 
@@ -229,9 +257,9 @@ def suyeom(tmp):
 def marker(tmp):
     print('뭉툭마커'); pkg = OUT / 'MungtukMarker-1.0'
     finalize(tmp / 'two' / 'GyeomsonMarker-Regular.ttf', pkg / 'MungtukMarker-Regular.ttf', rename=MARKER)
-    (pkg / 'OFL.txt').write_text(ofl_text([
+    put_text(pkg / 'OFL.txt', ofl_text([
         'Copyright (c) YoonDesign Inc. All Rights Reserved. (Gamja Flower)',
-        'Modifications (뭉툭마커 / Mungtuk Marker) Copyright 2026 도겸.']), encoding='utf-8')
+        'Modifications (뭉툭마커 / Mungtuk Marker) Copyright 2026 도겸.']))
     specimen(pkg / 'MungtukMarker-Regular.ttf', pkg / 'specimen.png',
              ['뭉툭마커 Mungtuk Marker', '겸손할 수 있을 줄 알았다', '그런데 너무 힘들다 0123456789',
               '~다람쥐 헌 쳇바퀴에 타고파 · 뷁 쀍 똠방각하 · The quick brown fox jumps!?'])
@@ -241,11 +269,11 @@ def marker(tmp):
 def western(tmp):
     print('황야웨스턴'); pkg = OUT / 'HwangyaWestern-1.0'
     finalize(tmp / 'two' / 'HwangyaWestern-Regular.ttf', pkg / 'HwangyaWestern-Regular.ttf')
-    (pkg / 'OFL.txt').write_text(ofl_text([
+    put_text(pkg / 'OFL.txt', ofl_text([
         'Copyright (c) 2011 by Sorkin Type Co (www.sorkintype.com),',
         'with Reserved Font Name "Rye".',
         "Copyright 2017-2023 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'. (Noto Serif CJK)",
-        'Modifications (황야웨스턴 / Hwangya Western) Copyright 2026 도겸.']), encoding='utf-8')
+        'Modifications (황야웨스턴 / Hwangya Western) Copyright 2026 도겸.']))
     specimen(pkg / 'HwangyaWestern-Regular.ttf', pkg / 'specimen.png',
              ['황야웨스턴 Hwangya Western', '황야의 무법자 WANTED', '석양이 지는 목장 0123456789',
               '~다람쥐 헌 쳇바퀴에 타고파 · 뷁 쀍 똠방각하 · The quick brown fox jumps!?'])
