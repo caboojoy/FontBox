@@ -101,13 +101,10 @@ drop policy if exists "ai_cache_insert"   on fonts.ai_cache;
 drop policy if exists "ai_cache_update"   on fonts.ai_cache;
 drop policy if exists "favorites_own"     on fonts.favorites;
 
+-- 공개(anon) 키는 읽기만. 추가·수정·삭제는 서버에서 service_role 키로만 한다
+-- (service_role 은 RLS 를 거치지 않으므로 쓰기 정책이 필요 없다)
 create policy "fonts_select_all" on fonts.fonts for select using (true);
-create policy "fonts_insert_all" on fonts.fonts for insert with check (true);
-create policy "fonts_update_all" on fonts.fonts for update using (true);
-create policy "fonts_delete_all" on fonts.fonts for delete using (true);
 
 create policy "ai_cache_select"  on fonts.ai_cache for select using (true);
-create policy "ai_cache_insert"  on fonts.ai_cache for insert with check (true);
-create policy "ai_cache_update"  on fonts.ai_cache for update using (true);
 
 create policy "favorites_own"    on fonts.favorites for all using (true);
