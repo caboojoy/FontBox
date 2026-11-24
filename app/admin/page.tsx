@@ -1,11 +1,23 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { Plus, Trash2, Eye, Check, RefreshCw, X } from 'lucide-react'
+import { Plus, Trash2, Eye, Check, RefreshCw, X, LogOut } from 'lucide-react'
 import { fontsDb as supabase } from '@/lib/supabase-client'
 import { Font } from '@/types'
 import { addFont, deleteFont, updateFont, getFontStats } from '@/actions/fonts'
 import { toSlug, isValidSlug } from '@/lib/slug'
+import { logout } from '@/actions/admin-auth'
+
+type ActionResult = { success: boolean; error?: string }
+
+// 서버 액션 결과를 항상 {success, error} 로 맞춘다 — 예외나 빈 응답(세션 만료 등)도 화면에 실패로 보이게
+async function safeCall(p: Promise<ActionResult>): Promise<ActionResult> {
+  try {
+    return (await p) ?? { success: false, error: '서버 응답이 없습니다. 다시 로그인해 주세요.' }
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : String(e) }
+  }
+}
 
 const CATEGORIES = [
   'gothic','myeongjo','handwriting','display','monospace',
@@ -66,7 +78,7 @@ export default function AdminPage() {
       setMsg({type:'err',text:'Slug는 영문 소문자·숫자·하이픈(-)만 쓸 수 있고 비어 있으면 안 됩니다. 예) noto-sans-kr'}); return
     }
     setSaving(true)
-    const result = await addFont({
+    const result = await safeCall(addFont({
       name:form.name, slug:form.slug,
       designer:form.designer||undefined, foundry:form.foundry||undefined,
       category:form.category,
@@ -80,7 +92,7 @@ export default function AdminPage() {
       supports_korean:form.supports_korean,
       supports_latin:form.supports_latin,
       is_featured:form.is_featured,
-    } as Parameters<typeof addFont>[0])
+    } as Parameters<typeof addFont>[0]))
 
     if (result.success) {
       setMsg({type:'ok',text:`✅ "${form.name}" 추가 완료! 사이트에 즉시 반영됩니다.`})
@@ -95,7 +107,7 @@ export default function AdminPage() {
   const handleDelete = async (f:Font) => {
     if (!confirm(`"${f.name}" 폰트를 삭제하시겠습니까?`)) return
     setDeleting(f.id)
-    const result = await deleteFont(f.id).catch(e => ({success:false, error:String(e)}))
+    const result = await safeCall(deleteFont(f.id))
     setMsg(result.success
       ? {type:'ok', text:`"${f.name}" 삭제 완료`}
       : {type:'err', text:`"${f.name}" 삭제 실패: ${result.error||'알 수 없는 오류'}`})
@@ -103,7 +115,7 @@ export default function AdminPage() {
   }
 
   const handleToggleFeatured = async (f:Font) => {
-    const result = await updateFont(f.id,{is_featured:!f.is_featured}).catch(e => ({success:false, error:String(e)}))
+    const result = await safeCall(updateFont(f.id,{is_featured:!f.is_featured}))
     if (!result.success) setMsg({type:'err', text:`"${f.name}" 추천 변경 실패: ${result.error||'알 수 없는 오류'}`})
     loadData()
   }
@@ -129,11 +141,18 @@ export default function AdminPage() {
             ))}
           </div>
         </div>
-        <button onClick={loadData}
-          className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm hover:bg-white/30 transition-all"
-          style={{color:'var(--text-muted)'}}>
-          <RefreshCw size={14}/> 새로고침
-        </button>
+        <div className="flex items-center gap-1">
+          <button onClick={loadData}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm hover:bg-white/30 transition-all"
+            style={{color:'var(--text-muted)'}}>
+            <RefreshCw size={14}/> 새로고침
+          </button>
+          <button onClick={async()=>{ await logout(); window.location.href='/admin/login' }}
+            className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm hover:bg-white/30 transition-all"
+            style={{color:'var(--text-muted)'}}>
+            <LogOut size={14}/> 로그아웃
+          </button>
+        </div>
       </div>
 
       {msg && (

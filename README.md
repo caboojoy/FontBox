@@ -24,11 +24,14 @@ npm install
 # 2. 환경 변수
 cp .env.example .env.local
 # → NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, ANTHROPIC_API_KEY 입력
+# → SUPABASE_SERVICE_ROLE_KEY (서버 쓰기용), ADMIN_PASSWORD (/admin 로그인 비밀번호) 도 입력
+#   ADMIN_PASSWORD 가 없으면 /admin 은 잠긴다. Vercel 에도 같은 이름으로 넣는다.
 
 # 3. Supabase 초기화 (순서 중요)
 # Supabase 대시보드 > SQL Editor 에서:
 # (1) supabase/schema.sql 실행
 # (2) supabase/seed.sql 실행  ← 초기 폰트 57개 삽입 (한 번만)
+# (3) supabase/05_lock_fonts_writes.sql 실행 ← 공개 키의 쓰기 권한 제거 (기존 DB 에 한 번)
 
 # 4. 실행
 npm run dev
@@ -39,7 +42,7 @@ npm run dev
 ## ➕ 폰트 추가 방법 (git push 불필요!)
 
 ### 방법 A — /admin 페이지 (가장 쉬움)
-1. `/admin` 접속
+1. `/admin` 접속 → `ADMIN_PASSWORD` 로 로그인 (12시간 유지)
 2. "새 폰트 추가" 탭에서 폼 입력
 3. "Supabase에 저장" 클릭
 4. **즉시 반영** — 재배포 없음

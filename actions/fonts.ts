@@ -3,6 +3,7 @@
 import { createServerClient } from '@/lib/supabase-server'
 import { Font } from '@/types'
 import { isValidSlug } from '@/lib/slug'
+import { isAdmin } from '@/actions/admin-auth'
 
 // 검색어의 ilike 특수문자 이스케이프 (%, _ 는 SQL 와일드카드)
 function escapeLike(s: string): string {
@@ -83,6 +84,10 @@ type WriteResult = { success: boolean; error?: string }
 // 쓰기 작업 공통 처리 — 관리자 키가 없거나 예외가 나도 던지지 않고 화면에 보여줄 오류 문구로 돌려준다
 // (서버 액션이 예외를 던지면 운영 환경에서는 메시지가 가려져 원인을 알 수 없다)
 async function write(run: (db: ReturnType<typeof createServerClient>) => Promise<WriteResult>): Promise<WriteResult> {
+  // 서버 액션은 화면 밖에서도 직접 부를 수 있으므로 여기서 관리자 로그인을 다시 확인한다
+  if (!(await isAdmin())) {
+    return { success: false, error: '관리자 로그인이 필요합니다. 다시 로그인해 주세요.' }
+  }
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     return { success: false, error: '서버에 SUPABASE_SERVICE_ROLE_KEY 가 설정되지 않아 저장·수정·삭제를 할 수 없습니다.' }
   }
