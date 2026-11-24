@@ -2,6 +2,7 @@
 
 import { createServerClient } from '@/lib/supabase-server'
 import { Font } from '@/types'
+import { isValidSlug } from '@/lib/slug'
 
 // 검색어의 ilike 특수문자 이스케이프 (%, _ 는 SQL 와일드카드)
 function escapeLike(s: string): string {
@@ -77,30 +78,50 @@ export async function getSimilarFonts(font: Font, limit = 4): Promise<Font[]> {
   return (data as Font[]) || []
 }
 
+type WriteResult = { success: boolean; error?: string }
+
+// 쓰기 작업 공통 처리 — 관리자 키가 없거나 예외가 나도 던지지 않고 화면에 보여줄 오류 문구로 돌려준다
+// (서버 액션이 예외를 던지면 운영 환경에서는 메시지가 가려져 원인을 알 수 없다)
+async function write(run: (db: ReturnType<typeof createServerClient>) => Promise<WriteResult>): Promise<WriteResult> {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    return { success: false, error: '서버에 SUPABASE_SERVICE_ROLE_KEY 가 설정되지 않아 저장·수정·삭제를 할 수 없습니다.' }
+  }
+  try {
+    return await run(createServerClient())
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : String(e) }
+  }
+}
+
 export async function addFont(
   font: Omit<Font, 'id' | 'created_at' | 'updated_at' | 'download_count'>
-): Promise<{ success: boolean; error?: string }> {
-  const db = createServerClient()
-  const { error } = await db.from('fonts').insert({ ...font, download_count: 0 })
-  if (error) return { success: false, error: error.message }
-  return { success: true }
+): Promise<WriteResult> {
+  if (!isValidSlug(font.slug)) {
+    return { success: false, error: `slug "${font.slug}" 가 올바르지 않습니다. 영문 소문자·숫자·하이픈(-)만 쓸 수 있습니다.` }
+  }
+  return write(async db => {
+    const { error } = await db.from('fonts').insert({ ...font, download_count: 0 })
+    if (error) return { success: false, error: error.message }
+    return { success: true }
+  })
 }
 
-export async function updateFont(
-  id: string,
-  updates: Partial<Font>
-): Promise<{ success: boolean; error?: string }> {
-  const db = createServerClient()
-  const { error } = await db.from('fonts').update(updates).eq('id', id)
-  if (error) return { success: false, error: error.message }
-  return { success: true }
+export async function updateFont(id: string, updates: Partial<Font>): Promise<WriteResult> {
+  return write(async db => {
+    const { data, error } = await db.from('fonts').update(updates).eq('id', id).select('id')
+    if (error) return { success: false, error: error.message }
+    if (!data?.length) return { success: false, error: '수정할 폰트를 찾지 못했습니다. 이미 삭제됐을 수 있습니다.' }
+    return { success: true }
+  })
 }
 
-export async function deleteFont(id: string): Promise<{ success: boolean; error?: string }> {
-  const db = createServerClient()
-  const { error } = await db.from('fonts').delete().eq('id', id)
-  if (error) return { success: false, error: error.message }
-  return { success: true }
+export async function deleteFont(id: string): Promise<WriteResult> {
+  return write(async db => {
+    const { data, error } = await db.from('fonts').delete().eq('id', id).select('id')
+    if (error) return { success: false, error: error.message }
+    if (!data?.length) return { success: false, error: '삭제할 폰트를 찾지 못했습니다. 이미 삭제됐을 수 있습니다.' }
+    return { success: true }
+  })
 }
 
 export async function getFontStats(): Promise<{

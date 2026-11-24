@@ -5,6 +5,7 @@ import { Plus, Trash2, Eye, Check, RefreshCw, X } from 'lucide-react'
 import { fontsDb as supabase } from '@/lib/supabase-client'
 import { Font } from '@/types'
 import { addFont, deleteFont, updateFont, getFontStats } from '@/actions/fonts'
+import { toSlug, isValidSlug } from '@/lib/slug'
 
 const CATEGORIES = [
   'gothic','myeongjo','handwriting','display','monospace',
@@ -35,7 +36,7 @@ export default function AdminPage() {
   const set = (k:string, v:unknown) => setForm(p => ({...p,[k]:v}))
 
   useEffect(() => {
-    set('slug', form.name.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,''))
+    set('slug', toSlug(form.name))
   }, [form.name])
 
   useEffect(() => {
@@ -60,6 +61,9 @@ export default function AdminPage() {
   const handleSave = async () => {
     if (!form.name||!form.cdn_url||!form.css_family) {
       setMsg({type:'err',text:'이름, CDN URL, CSS Family는 필수입니다.'}); return
+    }
+    if (!isValidSlug(form.slug)) {
+      setMsg({type:'err',text:'Slug는 영문 소문자·숫자·하이픈(-)만 쓸 수 있고 비어 있으면 안 됩니다. 예) noto-sans-kr'}); return
     }
     setSaving(true)
     const result = await addFont({
@@ -91,12 +95,16 @@ export default function AdminPage() {
   const handleDelete = async (f:Font) => {
     if (!confirm(`"${f.name}" 폰트를 삭제하시겠습니까?`)) return
     setDeleting(f.id)
-    await deleteFont(f.id)
+    const result = await deleteFont(f.id).catch(e => ({success:false, error:String(e)}))
+    setMsg(result.success
+      ? {type:'ok', text:`"${f.name}" 삭제 완료`}
+      : {type:'err', text:`"${f.name}" 삭제 실패: ${result.error||'알 수 없는 오류'}`})
     loadData(); setDeleting(null)
   }
 
   const handleToggleFeatured = async (f:Font) => {
-    await updateFont(f.id,{is_featured:!f.is_featured})
+    const result = await updateFont(f.id,{is_featured:!f.is_featured}).catch(e => ({success:false, error:String(e)}))
+    if (!result.success) setMsg({type:'err', text:`"${f.name}" 추천 변경 실패: ${result.error||'알 수 없는 오류'}`})
     loadData()
   }
 
@@ -187,7 +195,7 @@ export default function AdminPage() {
             <h2 className="font-semibold" style={{color:'var(--text-primary)'}}>폰트 정보 입력</h2>
             {[
               {label:'폰트 이름 *',key:'name',placeholder:'Noto Sans KR'},
-              {label:'Slug (자동생성)',key:'slug',placeholder:'noto-sans-kr'},
+              {label:'Slug (자동생성·수정 가능)',key:'slug',placeholder:'noto-sans-kr'},
               {label:'디자이너',key:'designer',placeholder:'Google'},
               {label:'제작사',key:'foundry',placeholder:'Google Fonts'},
               {label:'CDN URL *',key:'cdn_url',placeholder:'https://fonts.googleapis.com/css2?family=...'},
