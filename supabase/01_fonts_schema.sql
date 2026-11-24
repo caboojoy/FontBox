@@ -107,4 +107,4 @@ create policy "fonts_select_all" on fonts.fonts for select using (true);
 
 create policy "ai_cache_select"  on fonts.ai_cache for select using (true);
 
-create policy "favorites_own"    on fonts.favorites for all using (true);
+-- favorites: 사이트는 즐겨찾기를 브라우저에만 저장하므로 anon 정책을 두지 않는다 (접근 불가)

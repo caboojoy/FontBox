@@ -32,6 +32,7 @@ cp .env.example .env.local
 # (1) supabase/schema.sql 실행
 # (2) supabase/seed.sql 실행  ← 초기 폰트 57개 삽입 (한 번만)
 # (3) supabase/05_lock_fonts_writes.sql 실행 ← 공개 키의 쓰기 권한 제거 (기존 DB 에 한 번)
+# (4) supabase/06_lock_favorites.sql 실행    ← 쓰지 않는 favorites 테이블 공개 접근 제거 (기존 DB 에 한 번)
 
 # 4. 실행
 npm run dev
